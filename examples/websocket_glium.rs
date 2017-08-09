@@ -15,7 +15,6 @@ mod app {
     extern crate serde;
     use self::serde::{Deserialize, Deserializer};
     use support::app_macros;
-    // use self::serde_json;
     fn deserialize_optional_field<'de, T, D>(deserializer: D) -> Result<Option<Option<T>>, D::Error>
         where D: Deserializer<'de>,
               T: Deserialize<'de>
@@ -54,7 +53,9 @@ mod app {
         (greedcommand,set_greedcommand,i32),
     }
     receive_msg_macro!{
-        (type_name,set_type_name,String),
+        rename:{
+             (type_name,set_type_name,String,"type"),
+        },else:{
         (tables,set_tables,Vec<TableInfo>),
         (players,set_players,Vec<Player>),
         (request,set_request,String),
@@ -63,6 +64,7 @@ mod app {
         (location,set_location,String),
         (sender,set_sender,String),
         (message,set_message,String)
+        }
     }
 }
 #[cfg(all(feature="backend_glium_winit",feature="web_socket"))]
@@ -85,6 +87,7 @@ mod feature {
     use self::conrod_chat::chat;
     use std;
     use app;
+
     pub fn main() {
         // Build the window.
         let mut events_loop = glium::glutin::EventsLoop::new();
@@ -100,10 +103,20 @@ mod feature {
             let rgba_image = image::open(&std::path::Path::new(&path)).unwrap().to_rgba();
             let image_dimensions = rgba_image.dimensions();
             let raw_image =
-                glium::texture::RawImage2d::from_raw_rgba_reversed(rgba_image.into_raw(),
+                glium::texture::RawImage2d::from_raw_rgba_reversed(&rgba_image.into_raw(),
                                                                    image_dimensions);
             let texture = glium::texture::Texture2d::new(display, raw_image).unwrap();
             texture
+        }
+        fn draw(display: &glium::Display,
+                renderer: &mut conrod::backend::glium::Renderer,
+                image_map: &conrod::image::Map<glium::Texture2d>,
+                primitives: &conrod::render::OwnedPrimitives) {
+            renderer.fill(display, primitives.walk(), &image_map);
+            let mut target = display.draw();
+            target.clear_color(0.0, 0.0, 0.0, 1.0);
+            renderer.draw(display, &mut target, &image_map).unwrap();
+            target.finish().unwrap();
         }
         // A type used for converting `conrod::render::Primitives` into `Command`s that can be used
         // for drawing to the glium `Surface`.
@@ -119,7 +132,6 @@ mod feature {
         // This window proxy will allow conrod to wake up the `winit::Window` for rendering.
         let events_loop_proxy = events_loop.create_proxy();
         let mut last_update = std::time::Instant::now();
-        //  let event_tx_clone = event_tx.clone();
         let (futures_tx, futures_rx) = futures::sync::mpsc::channel(1);
         let futures_tx_clone = futures_tx.clone();
         let futures_tx_clone2 = futures_tx.clone();
@@ -131,7 +143,7 @@ mod feature {
             let font_path = assets.join("fonts/NotoSans/NotoSans-Regular.ttf");
             ui.fonts.insert_from_file(font_path).unwrap();
             let cj =
-                chat::ChatInstance::new("Alan".to_owned(), Box::new(|h: &mut Vec<chat::message::Message>,
+                chat::ChatInstance::new("Alan".to_owned(), Box::new(move |h: &mut Vec<chat::message::Message>,
                                          conrod_msg: chat::ConrodMessage<websocket::Message>| {
                     if let chat::ConrodMessage::Socket(j) = conrod_msg.clone() {
                         if let websocket::OwnedMessage::Text(z) = websocket::OwnedMessage::from(j) {
@@ -145,7 +157,6 @@ mod feature {
                                                          sender,
                                                          message }) =
                                 app::ReceivedMsg::deserialize_receive(&z) {
-
                                 if let (Some(Some(_type_name)),
                                         Some(Some(_location)),
                                         Some(Some(_sender)),
@@ -192,7 +203,6 @@ mod feature {
                     .unwrap();
                 let five_sec = std::time::Duration::from_secs(5);
                 std::thread::sleep(five_sec);
-                //    event_tx_clone.send(ConrodMessage::Websocket(websocket::Message::text(o))).unwrap();
                 c += 1;
             }
         });
@@ -219,8 +229,8 @@ mod feature {
                            });
         std::thread::spawn(move || { client::run(CONNECTION, proxy_tx, futures_rx); });
 
-
-        'main: loop {
+        let mut closed = false;
+        while !closed {
 
             // We don't want to loop any faster than 60 FPS, so wait until it has been at least
             // 16ms since the last yield.
@@ -230,42 +240,45 @@ mod feature {
             if duration_since_last_update < sixteen_ms {
                 std::thread::sleep(sixteen_ms - duration_since_last_update);
             }
-
-            let mut events: Vec<_> = display.poll_events().collect();
-
-            // If there are no events, wait for the next event.
-            if events.is_empty() {
-                events.extend(display.wait_events().next());
-            }
-
-            // Send any relevant events to the conrod thread.
-            for event in events {
-
+            events_loop.run_forever(|event| {
                 // Use the `winit` backend feature to convert the winit event to a conrod one.
-                if let Some(event) = conrod::backend::winit::convert(event.clone(), &display) {
+                if let Some(event) = conrod::backend::winit::convert_event(event.clone(), &display) {
                     event_tx.send(chat::ConrodMessage::Event(event)).unwrap();
                 }
 
                 match event {
-                    // Break from the loop upon `_ownedmsg as chatviewEscape`.
-                    glium::glutin::Event::KeyboardInput(_, _, Some(glium::glutin::VirtualKeyCode::Escape)) |
-                    glium::glutin::Event::Closed =>
-                        break 'main,
-                    _ => {}
+                    glium::glutin::Event::WindowEvent { event, .. } => match event {
+                        // Break from the loop upon `Escape`.
+                        glium::glutin::WindowEvent::Closed |
+                        glium::glutin::WindowEvent::KeyboardInput {
+                            input: glium::glutin::KeyboardInput {
+                                virtual_keycode: Some(glium::glutin::VirtualKeyCode::Escape),
+                                ..
+                            },
+                            ..
+                        } => {
+                            closed = true;
+                            return glium::glutin::ControlFlow::Break;
+                        },
+                        // We must re-draw on `Resized`, as the event loops become blocked during
+                        // resize on macOS.
+                        glium::glutin::WindowEvent::Resized(..) => {
+                            if let Some(primitives) = render_rx.iter().next() {
+                                draw(&display, &mut renderer, &image_map, &primitives);
+                            }
+                        },
+                        _ => {},
+                    },
+                    glium::glutin::Event::Awakened => return glium::glutin::ControlFlow::Break,
+                    _ => (),
                 }
-            }
+
+                glium::glutin::ControlFlow::Continue
+});
 
             // Draw the most recently received `conrod::render::Primitives` sent from the `Ui`.
-            if let Ok(mut primitives) = render_rx.try_recv() {
-                while let Ok(newest) = render_rx.try_recv() {
-                    primitives = newest;
-                }
-
-                renderer.fill(&display, primitives.walk(), &image_map);
-                let mut target = display.draw();
-                target.clear_color(0.0, 0.0, 0.0, 1.0);
-                renderer.draw(&display, &mut target, &image_map).unwrap();
-                target.finish().unwrap();
+            if let Some(primitives) = render_rx.try_iter().last() {
+                draw(&display, &mut renderer, &image_map, &primitives);
             }
 
             last_update = std::time::Instant::now();

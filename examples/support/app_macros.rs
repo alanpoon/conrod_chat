@@ -26,26 +26,37 @@ macro_rules! send_msg_macro{
         }
     }
 }
+//this allows serde rename
 macro_rules! receive_msg_macro{
-    ($(($k_alias:ident,$k_function:ident,$k_type:ty)),*$(,)*) =>{
+    ( rename:{ $(($k_alias:ident,$k_function:ident,$k_type:ty,$k_rename:expr)),*$(,)*},
+    else:{$(($e_alias:ident,$e_function:ident,$e_type:ty)),*$(,)*}
+       ) =>{
 #[derive(Serialize, Deserialize, Default,Debug, Clone)]
 #[serde(default)]
         pub struct ReceivedMsg{
+             $(
+    #[serde(rename = $k_rename)]
+    #[serde(deserialize_with = "deserialize_optional_field")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+                pub $k_alias:Option<Option<$k_type>>,)*
             $(
     #[serde(deserialize_with = "deserialize_optional_field")]
     #[serde(skip_serializing_if = "Option::is_none")]
-                pub $k_alias:Option<Option<$k_type>>),*
+                pub $e_alias:Option<Option<$e_type>>),*
         }
 
         impl ReceivedMsg{
             pub fn deserialize_receive(json: &str) -> Result<ReceivedMsg, serde_json::Error> {
                 serde_json::from_str(json)
             }
+            $( pub fn $e_function(&mut self,s:$e_type)->&mut Self{
+                self.$e_alias = Some(Some(s));
+                self
+            })*
             $( pub fn $k_function(&mut self,s:$k_type)->&mut Self{
                 self.$k_alias = Some(Some(s));
                 self
-            })*
-            
+            })* 
         }
     }
 }
