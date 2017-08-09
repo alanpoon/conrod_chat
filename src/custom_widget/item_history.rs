@@ -111,13 +111,15 @@ impl<'a> Widget for ItemHistory<'a> {
             .align_left_of(id)
             .color(color::Color::Rgba(rr, rg, rb, ra))
             .set(state.ids.rect, ui);
-        if let Some(k) = self.message.image_id{
+        if let Some(k) = self.message.image_id {
             widget::Image::new(k)
-            .top_left_with_margins_on(state.ids.rect, static_style.image.4, static_style.image.3)
-            .w_h(static_style.image.1, static_style.image.2)
-            .set(state.ids.display_pic, ui);
+                .top_left_with_margins_on(state.ids.rect,
+                                          static_style.image.4,
+                                          static_style.image.3)
+                .w_h(static_style.image.1, static_style.image.2)
+                .set(state.ids.display_pic, ui);
         }
-      
+
         let mut z = self.message.name.clone();
         z.push_str(" : ");
         z.push_str(&self.message.text);

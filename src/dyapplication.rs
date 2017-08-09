@@ -36,18 +36,22 @@ pub struct Static_Style {
     pub text: (u32, RGB, f64, f64, f64, f64), // fontsize,RGB,w,h,l,t
 }
 impl Application {
-    pub fn new(libpath:&'static str)->Application{
+    pub fn new(libpath: &'static str) -> Application {
         Application(Library::new(libpath).unwrap_or_else(|error| panic!("{}", error)))
     }
-    pub fn in_loop(&mut self,libpath:&'static str,last_modified:&mut std::time::Instant)->Self{
-                if let Ok(Ok(modified)) = std::fs::metadata(libpath).map(|m| m.modified()) {
+    pub fn in_loop(&mut self,
+                   libpath: &'static str,
+                   last_modified: &mut std::time::Instant)
+                   -> Self {
+        if let Ok(Ok(modified)) = std::fs::metadata(libpath).map(|m| m.modified()) {
             if modified > last_modified {
-                 drop(self);
-                  last_modified = modified;
-        Application(Library::new(libpath).unwrap_or_else(|error| panic!("{}", error)))
+                drop(self);
+                last_modified = modified;
+                Application(Library::new(libpath).unwrap_or_else(|error| panic!("{}", error)))
             }
+        } else {
             self
-       
+        }
     }
     pub fn get_static_styles(&self) -> Static_Style {
         unsafe {

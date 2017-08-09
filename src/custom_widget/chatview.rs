@@ -190,7 +190,9 @@ impl<'a> Widget for ChatView<'a> {
         }
         let mut it_j = self.lists.iter();
         while let (Some(a), Some(item)) = (it_j.next(), items.next(ui)) {
-            let cb = item_history::ItemHistory::new(&a, &static_style).w_h(static_style.w_h.0, static_style.w_h.1);
+            let cb =
+                item_history::ItemHistory::new(&a, &static_style).w_h(static_style.w_h.0,
+                                                                      static_style.w_h.1);
             item.set(cb, ui);
         }
         Some(())

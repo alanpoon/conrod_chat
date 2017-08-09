@@ -7,17 +7,20 @@ authors = ["alanpoon"]
 conrod = { version ="0.54", features = ["glium","winit"]}
 conrod_derive = "0.1.0"
 libloading = { version ="0.4.0",optional=true}
-image = "0.15.0"
-find_folder = "0.3.0"
 websocket = { version ="0.20.2",optional=true}
 futures ={ version = "0.1.14", features=["use_std"] }
 tokio-core ="0.1.9"
-serde="1.0"
-serde_json = "1.0"
-serde_derive ="1.0"
 
 [features]
 hotload = ["libloading"]
 web_socket = ["websocket"]
 backend_glium_winit = []
 default = ["web_socket","backend_glium_winit"]
+
+
+[dev-dependencies]
+serde="1.0"
+serde_json = "1.0"
+image = "0.15.0"
+find_folder = "0.3.0"
+serde_derive ="1.0"

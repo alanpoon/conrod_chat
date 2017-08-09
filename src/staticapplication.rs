@@ -35,23 +35,29 @@ pub struct Static_Style {
     pub text: (u32, RGB, f64, f64, f64, f64), // fontsize,RGB,w,h,l,t
 }
 impl Application {
-       pub fn new(libpath:&'static str)->Application{
+    pub fn new(libpath: &'static str) -> Application {
         Application()
     }
-    pub fn in_loop(t:&mut Application,libpath:&'static str,last_modified:&mut std::time::Instant){
-         
+    pub fn in_loop(t: &mut Application,
+                   libpath: &'static str,
+                   last_modified: &mut std::time::Instant) {
+
     }
     pub fn get_static_styles(&self) -> Static_Style {
-    Static_Style{
-      w_h:(300.0,40.0),
-      rect:(RGB(0.40,0.15,0.20,1.0),300.0,40.0,2.0),
-    image:(SpriteInfo{
-      first:(0.0,270.0),
-      num_in_row:4.0,
-      w_h:(150.0,90.0),
-      pad:(10.0,10.0,0.0,0.0)
-    },20.0,20.0,5.0,5.0),
-    text:(18,RGB(0.82,0.27,0.25,1.0),100.0,50.0,22.0,5.0),
-  }
+        Static_Style {
+            w_h: (300.0, 40.0),
+            rect: (RGB(0.40, 0.15, 0.20, 1.0), 300.0, 40.0, 2.0),
+            image: (SpriteInfo {
+                        first: (0.0, 270.0),
+                        num_in_row: 4.0,
+                        w_h: (150.0, 90.0),
+                        pad: (10.0, 10.0, 0.0, 0.0),
+                    },
+                    20.0,
+                    20.0,
+                    5.0,
+                    5.0),
+            text: (18, RGB(0.82, 0.27, 0.25, 1.0), 100.0, 50.0, 22.0, 5.0),
+        }
     }
 }
