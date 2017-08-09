@@ -80,8 +80,6 @@ mod feature {
     const WIN_W: u32 = 600;
     const WIN_H: u32 = 800;
     const CONNECTION: &'static str = "ws://ec2-35-157-160-241.eu-central-1.compute.amazonaws.com:8080/greed";
-    // use self::futures::{Future, Sink};
-    //   use self::futures;
     use feature::futures::{Future, Sink};
     use self::conrod_chat::backend::websocket::client;
     use self::conrod_chat::chat;
