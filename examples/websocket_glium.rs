@@ -54,8 +54,7 @@ mod app {
     }
     receive_msg_macro!{
         rename:{
-             (type_name,set_type_name,String,"type"),
-        },else:{
+        },optional:{
         (tables,set_tables,Vec<TableInfo>),
         (players,set_players,Vec<Player>),
         (request,set_request,String),
@@ -64,7 +63,7 @@ mod app {
         (location,set_location,String),
         (sender,set_sender,String),
         (message,set_message,String)
-        }
+        },rename_optional:{ (type_name,set_type_name,String,"type"),},else:{}
     }
 }
 #[cfg(all(feature="backend_glium_winit",feature="web_socket"))]
