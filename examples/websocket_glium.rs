@@ -132,7 +132,8 @@ mod feature {
         let (futures_tx, futures_rx) = futures::sync::mpsc::channel(1);
         let futures_tx_clone = futures_tx.clone();
         let futures_tx_clone2 = futures_tx.clone();
-        let (proxy_action_tx, proxy_action_rx) = std::sync::mpsc::channel(); //chatview::Message
+        let (proxy_action_tx, proxy_action_rx) = std::sync::mpsc::channel();
+        let mut history = vec![];
         std::thread::spawn(move || {
             let mut ui = conrod::UiBuilder::new([WIN_W as f64, WIN_H as f64]).build();
             // Add a `Font` to the `Ui`'s `font::Map` from file.
@@ -182,6 +183,7 @@ mod feature {
                 }))
                         .set_image_id(rust_logo)
                         .run(&mut ui,
+                            &mut history,
                              event_rx,
                              proxy_action_tx,
                              render_tx,

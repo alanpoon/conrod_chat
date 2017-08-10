@@ -39,6 +39,7 @@ impl<T> ChatInstance<T>
     }
     pub fn run(&mut self,
                ui: &mut conrod::Ui,
+               history:&mut Vec<chatview::Message>,
                event_rx: std::sync::mpsc::Receiver<ConrodMessage<T>>,
                action_tx: std::sync::mpsc::Sender<chatview::Message>,
                render_tx: std::sync::mpsc::Sender<conrod::render::OwnedPrimitives>,
@@ -49,8 +50,6 @@ impl<T> ChatInstance<T>
         let mut needs_update = true;
         let mut last_update = std::time::Instant::now();
         let mut app = application::Application::new(LIB_PATH);
-        let mut history = vec![];
-
         'conrod: loop {
             application::Application::in_loop(&mut app, LIB_PATH, &mut last_update);
             let sixteen_ms = std::time::Duration::from_millis(16);
@@ -62,13 +61,13 @@ impl<T> ChatInstance<T>
             // Collect any pending events.
             let mut events = Vec::new();
             while let Ok(event) = event_rx.try_recv() {
-                self.update_state(&mut history, event.clone());
+                self.update_state(history, event.clone());
                 events.push(event);
             }
             if events.is_empty() || !needs_update {
                 match event_rx.recv() {
                     Ok(event) => {
-                        self.update_state(&mut history, event.clone());
+                        self.update_state(history, event.clone());
                         events.push(event);
                     }
                     Err(_) => break 'conrod,
@@ -85,7 +84,7 @@ impl<T> ChatInstance<T>
             }
             self.set_ui(ui.set_widgets(),
                         &ids,
-                        &mut history,
+                        history,
                         app.get_static_styles(),
                         action_tx.clone());
             if let Some(primitives) = ui.draw_if_changed() {

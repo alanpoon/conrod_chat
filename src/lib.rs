@@ -9,6 +9,8 @@ extern crate tokio_core;
 #[cfg(feature="web_socket")]
 extern crate websocket;
 #[cfg(feature="hotload")]
+extern crate libloading;
+#[cfg(feature="hotload")]
 pub mod dyapplication;
 #[cfg(not(feature="hotload"))]
 pub mod staticapplication;
