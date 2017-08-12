@@ -45,8 +45,8 @@ impl Application {
     }
     pub fn get_static_styles(&self) -> Static_Style {
         Static_Style {
-            w_h: (300.0, 40.0),
-            rect: (RGB(0.40, 0.15, 0.20, 1.0), 300.0, 40.0, 2.0),
+            w_h: (200.0, 30.0),
+            rect: (RGB(0.40, 0.15, 0.20, 1.0), 200.0, 30.0, 2.0),
             image: (SpriteInfo {
                         first: (0.0, 270.0),
                         num_in_row: 4.0,

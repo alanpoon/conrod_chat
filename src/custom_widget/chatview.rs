@@ -132,17 +132,20 @@ impl<'a> Widget for ChatView<'a> {
         // Finally, we'll describe how we want our widget drawn by simply instantiating the
         // necessary primitive graphics widgets.
         //
+        let can = ui.rect_of(id).unwrap();
+        let w_can = can.w();
+        let h_can = can.h();
         widget::Canvas::new()
             .flow_down(&[(state.ids.message_panel,
                           widget::Canvas::new().color(color::GREEN).pad_bottom(20.0)),
                          (state.ids.text_edit_body,
                           widget::Canvas::new()
-                              .length(200.0)
+                              .length(h_can *0.2)
                               .flow_right(&[(state.ids.text_edit_panel,
                                              widget::Canvas::new()
                                                  .scroll_kids_vertically()
                                                  .color(color::DARK_CHARCOAL)
-                                                 .length(600.0)),
+                                                 .length(w_can*0.7)),
                                             (state.ids.text_edit_button_panel,
                                              widget::Canvas::new()
                                                  .color(color::DARK_CHARCOAL))]))])
@@ -160,9 +163,13 @@ impl<'a> Widget for ChatView<'a> {
             .set(state.ids.text_edit, ui) {
             *k = edit;
         }
+          let button_panel = ui.rect_of(state.ids.text_edit_button_panel).unwrap();
+        let w_button_panel = button_panel.w();
+        let h_button_panel = button_panel.h();
         if widget::Button::new()
                .color(color::GREY)
-               .w_h(120.0, 60.0)
+               .padded_w_of(state.ids.text_edit_button_panel,0.2*w_button_panel)
+               .padded_h_of(state.ids.text_edit_button_panel,0.2*h_button_panel)
                .label("Enter")
                .middle_of(state.ids.text_edit_button_panel)
                .set(state.ids.text_edit_button, ui)
