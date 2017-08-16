@@ -214,16 +214,12 @@ mod feature {
                                }
                                // send to Websocket
                                while let Ok(s) = proxy_action_rx.try_recv() {
-                                   let chat::message::Message { text, .. } = s;
-                                   let kl =
-                    app::SendMsg::new().set_chat(text).set_location("lobby".to_owned()).clone();
-                                   if let Ok(_text) = app::SendMsg::serialize_send(kl) {
-                                       println!("_text json: {:?}", _text);
+                                       println!("_text json: {:?}", s);
                                        futures_tx_clone2.clone()
-                                           .send(websocket::Message::text(_text))
+                                           .send(websocket::Message::text(s))
                                            .wait()
                                            .unwrap();
-                                   }
+                                   
                                }
                            });
         std::thread::spawn(move || { client::run(CONNECTION, proxy_tx, futures_rx); });

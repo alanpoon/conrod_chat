@@ -41,7 +41,7 @@ impl<T> ChatInstance<T>
                ui: &mut conrod::Ui,
                history:&mut Vec<chatview::Message>,
                event_rx: std::sync::mpsc::Receiver<ConrodMessage<T>>,
-               action_tx: std::sync::mpsc::Sender<chatview::Message>,
+               action_tx: std::sync::mpsc::Sender<String>,
                render_tx: std::sync::mpsc::Sender<conrod::render::OwnedPrimitives>,
                events_loop_proxy: glium::glutin::EventsLoopProxy) {
 
@@ -103,7 +103,7 @@ impl<T> ChatInstance<T>
               ids: &Ids,
               history: &mut Vec<chatview::Message>,
               styles: application::Static_Style,
-              action_tx: mpsc::Sender<chatview::Message>) {
+              action_tx: mpsc::Sender<String>) {
         widget::Canvas::new().color(color::LIGHT_BLUE).set(ids.master, ui);
         // Instantiate the `Image` at its full size in the middle of the window.
         chatview::ChatView::new(history,
@@ -111,12 +111,16 @@ impl<T> ChatInstance<T>
                                 styles,
                                 self.image_id,
                                 &self.name,
-                                action_tx)
+                                action_tx,
+                                Box::new(process))
                 .middle_of(ids.master)
                 .set(ids.chatview, ui);
     }
 }
-
+fn process(name:&str,text:&str)->String{
+        let g = format!("{{chat:{},location:'lobby'}}",text);
+        g
+}
 #[derive(Clone,Debug)]
 pub enum ConrodMessage<T: Clone> {
     Event(conrod::event::Input),

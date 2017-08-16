@@ -19,12 +19,13 @@ pub struct ChatView<'a> {
     /// Whether the button is currently enabled, i.e. whether it responds to
     /// user input.
     pub static_style: application::Static_Style,
-    pub action_tx: mpsc::Sender<Message>,
+    pub action_tx: mpsc::Sender<String>,
     pub image_id: Option<conrod::image::Id>,
     pub name: &'a String,
+    pub closure:Box<fn(&str,&str)->String>,
     enabled: bool,
 }
-#[derive(Debug)]
+#[derive(Debug,Clone)]
 pub struct Message {
     pub image_id: Option<image::Id>,
     pub name: String,
@@ -55,7 +56,6 @@ widget_ids! {
         text_edit_panel,
         text_edit_panel_scrollbar,
         text_edit,
-        text_rect,
         text_edit_button_panel,
         text_edit_button,
     }
@@ -73,7 +73,8 @@ impl<'a> ChatView<'a> {
                static_s: application::Static_Style,
                image_id: Option<conrod::image::Id>,
                name: &'a String,
-               action_tx: mpsc::Sender<Message>)
+               action_tx: mpsc::Sender<String>,
+               closure:Box<fn(&str,&str)->String>)
                -> Self {
         ChatView {
             lists: lists,
@@ -84,6 +85,7 @@ impl<'a> ChatView<'a> {
             image_id: image_id,
             name: name,
             action_tx: action_tx,
+            closure:closure,
             enabled: true,
         }
     }
@@ -174,11 +176,9 @@ impl<'a> Widget for ChatView<'a> {
                .middle_of(state.ids.text_edit_button_panel)
                .set(state.ids.text_edit_button, ui)
                .was_clicked() {
-            let g = Message {
-                image_id: self.image_id,
-                name: self.name.clone(),
-                text: k.clone(),
-            };
+          //  let mut g ="".to_string();
+           // let g = format!("{{chat:{},location:'lobby'}}",k);
+            let g= (*self.closure)(self.name,k);
             self.action_tx.send(g).unwrap();
             *k = "".to_owned();
         };

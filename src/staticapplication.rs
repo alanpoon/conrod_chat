@@ -38,6 +38,9 @@ impl Application {
     pub fn new(libpath: &'static str) -> Application {
         Application()
     }
+    pub fn default() -> Application {
+        Application()
+    }
     pub fn in_loop(t: &mut Application,
                    libpath: &'static str,
                    last_modified: &mut std::time::Instant) {
