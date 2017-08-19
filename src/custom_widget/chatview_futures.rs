@@ -3,33 +3,29 @@ use conrod::{self, widget, Colorable, Labelable, Positionable, Widget, image, Si
 use dyapplication as application;
 #[cfg(not(feature="hotload"))]
 use staticapplication as application;
-use custom_widget::item_history;
-use std::sync::mpsc;
+use custom_widget::{chatview,item_history};
+use futures::{Future,Sink};
+use futures::sync::mpsc;
+
 /// The type upon which we'll implement the `Widget` trait.
 #[derive(WidgetCommon)]
-pub struct ChatView<'a> {
+pub struct ChatView<'a, T> {
     /// An object that handles some of the dirty work of rendering a GUI. We don't
     /// really have to worry about it.
     #[conrod(common_builder)]
     common: widget::CommonBuilder,
-    pub lists: &'a mut Vec<Message>,
+    pub lists: &'a mut Vec<chatview::Message>,
     pub text_edit: &'a mut String,
     /// See the Style struct below.
     style: Style,
     /// Whether the button is currently enabled, i.e. whether it responds to
     /// user input.
     pub static_style: application::Static_Style,
-    pub action_tx: mpsc::Sender<String>,
+    pub action_tx: mpsc::Sender<T>,
     pub image_id: Option<conrod::image::Id>,
     pub name: &'a String,
-    pub closure:Box<fn(&str,&str)->String>,
+    pub closure:Box<fn(&String,&String)->T>,
     enabled: bool,
-}
-#[derive(Debug,Clone)]
-pub struct Message {
-    pub image_id: Option<image::Id>,
-    pub name: String,
-    pub text: String,
 }
 
 #[derive(Copy, Clone, Debug, Default, PartialEq, WidgetStyle)]
@@ -66,15 +62,15 @@ pub struct State {
     pub ids: Ids,
 }
 
-impl<'a> ChatView<'a> {
+impl<'a,T> ChatView<'a, T> {
     /// Create a button context to be built upon.
-    pub fn new(lists: &'a mut Vec<Message>,
+    pub fn new(lists: &'a mut Vec<chatview::Message>,
                te: &'a mut String,
                static_s: application::Static_Style,
                image_id: Option<conrod::image::Id>,
                name: &'a String,
-               action_tx: mpsc::Sender<String>,
-               closure:Box<fn(&str,&str)->String>)
+               action_tx: mpsc::Sender<T>,
+               closure:Box<fn(&String,& String)->T>)
                -> Self {
         ChatView {
             lists: lists,
@@ -108,7 +104,7 @@ impl<'a> ChatView<'a> {
 
 /// A custom Conrod widget must implement the Widget trait. See the **Widget** trait
 /// documentation for more details.
-impl<'a> Widget for ChatView<'a> {
+impl<'a, T> Widget for ChatView<'a, T> {
     /// The State struct that we defined above.
     type State = State;
     /// The Style struct that we defined using the `widget_style!` macro.
@@ -129,7 +125,7 @@ impl<'a> Widget for ChatView<'a> {
     /// Update the state of the button by handling any input that has occurred since the last
     /// update.
     fn update(self, args: widget::UpdateArgs<Self>) -> Option<()> {
-        let widget::UpdateArgs { id, state, mut ui,  .. } = args;
+        let widget::UpdateArgs { id, state, mut ui, style, .. } = args;
         let static_style = self.static_style;
         // Finally, we'll describe how we want our widget drawn by simply instantiating the
         // necessary primitive graphics widgets.
@@ -178,8 +174,9 @@ impl<'a> Widget for ChatView<'a> {
                .was_clicked() {
           //  let mut g ="".to_string();
            // let g = format!("{{chat:{},location:'lobby'}}",k);
-            let g= (*self.closure)(self.name,k);
-            self.action_tx.send(g).unwrap();
+           let kc= k.clone();
+            let g= (*self.closure)(self.name,&kc);
+            self.action_tx.send(g).wait().unwrap();
             *k = "".to_owned();
         };
         widget::Scrollbar::y_axis(state.ids.text_edit_panel)

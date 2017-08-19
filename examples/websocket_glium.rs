@@ -214,7 +214,6 @@ mod feature {
                                }
                                // send to Websocket
                                while let Ok(s) = proxy_action_rx.try_recv() {
-                                       println!("_text json: {:?}", s);
                                        futures_tx_clone2.clone()
                                            .send(websocket::Message::text(s))
                                            .wait()

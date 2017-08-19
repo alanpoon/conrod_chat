@@ -1,7 +1,6 @@
 use custom_widget::chatview;
 use conrod::{self, color, widget, Colorable, Positionable, Widget};
 use conrod::backend::glium::glium;
-use conrod::backend::glium::glium::Surface;
 use std;
 use app::Ids;
 use std::sync::mpsc;

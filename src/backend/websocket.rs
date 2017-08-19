@@ -1,14 +1,13 @@
 pub mod client {
     use std;
-    use std::thread;
-    use std::io::stdin;
     use tokio_core::reactor::Core;
     use futures::future::Future;
     use futures::sink::Sink;
     use futures::stream::Stream;
     use futures::sync::mpsc;
-    use websocket::result::WebSocketError;
-    use websocket::{ClientBuilder, OwnedMessage, Message};
+    use websocket::{ClientBuilder};
+    pub use websocket::OwnedMessage;
+    pub use websocket::Message;
     pub fn run<'a>(con: &'static str,
                    gui: std::sync::mpsc::Sender<Message<'a>>,
                    rx: mpsc::Receiver<Message<'a>>) {
@@ -49,4 +48,5 @@ pub mod client {
         core.run(runner).unwrap();
     }
 
+ 
 }
