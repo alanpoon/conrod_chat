@@ -22,7 +22,7 @@ pub struct ChatView<'a> {
     pub action_tx: mpsc::Sender<String>,
     pub image_id: Option<conrod::image::Id>,
     pub name: &'a String,
-    pub closure:Box<fn(&str,&str)->String>,
+    pub closure: Box<fn(&str, &str) -> String>,
     enabled: bool,
 }
 #[derive(Debug,Clone)]
@@ -74,7 +74,7 @@ impl<'a> ChatView<'a> {
                image_id: Option<conrod::image::Id>,
                name: &'a String,
                action_tx: mpsc::Sender<String>,
-               closure:Box<fn(&str,&str)->String>)
+               closure: Box<fn(&str, &str) -> String>)
                -> Self {
         ChatView {
             lists: lists,
@@ -85,7 +85,7 @@ impl<'a> ChatView<'a> {
             image_id: image_id,
             name: name,
             action_tx: action_tx,
-            closure:closure,
+            closure: closure,
             enabled: true,
         }
     }
@@ -129,7 +129,7 @@ impl<'a> Widget for ChatView<'a> {
     /// Update the state of the button by handling any input that has occurred since the last
     /// update.
     fn update(self, args: widget::UpdateArgs<Self>) -> Option<()> {
-        let widget::UpdateArgs { id, state, mut ui,  .. } = args;
+        let widget::UpdateArgs { id, state, mut ui, .. } = args;
         let static_style = self.static_style;
         // Finally, we'll describe how we want our widget drawn by simply instantiating the
         // necessary primitive graphics widgets.
@@ -142,12 +142,12 @@ impl<'a> Widget for ChatView<'a> {
                           widget::Canvas::new().color(color::GREEN).pad_bottom(20.0)),
                          (state.ids.text_edit_body,
                           widget::Canvas::new()
-                              .length(h_can *0.2)
+                              .length(h_can * 0.2)
                               .flow_right(&[(state.ids.text_edit_panel,
                                              widget::Canvas::new()
                                                  .scroll_kids_vertically()
                                                  .color(color::DARK_CHARCOAL)
-                                                 .length(w_can*0.7)),
+                                                 .length(w_can * 0.7)),
                                             (state.ids.text_edit_button_panel,
                                              widget::Canvas::new()
                                                  .color(color::DARK_CHARCOAL))]))])
@@ -165,20 +165,20 @@ impl<'a> Widget for ChatView<'a> {
             .set(state.ids.text_edit, ui) {
             *k = edit;
         }
-          let button_panel = ui.rect_of(state.ids.text_edit_button_panel).unwrap();
+        let button_panel = ui.rect_of(state.ids.text_edit_button_panel).unwrap();
         let w_button_panel = button_panel.w();
         let h_button_panel = button_panel.h();
         if widget::Button::new()
                .color(color::GREY)
-               .padded_w_of(state.ids.text_edit_button_panel,0.2*w_button_panel)
-               .padded_h_of(state.ids.text_edit_button_panel,0.2*h_button_panel)
+               .padded_w_of(state.ids.text_edit_button_panel, 0.2 * w_button_panel)
+               .padded_h_of(state.ids.text_edit_button_panel, 0.2 * h_button_panel)
                .label("Enter")
                .middle_of(state.ids.text_edit_button_panel)
                .set(state.ids.text_edit_button, ui)
                .was_clicked() {
-          //  let mut g ="".to_string();
-           // let g = format!("{{chat:{},location:'lobby'}}",k);
-            let g= (*self.closure)(self.name,k);
+            //  let mut g ="".to_string();
+            // let g = format!("{{chat:{},location:'lobby'}}",k);
+            let g = (*self.closure)(self.name, k);
             self.action_tx.send(g).unwrap();
             *k = "".to_owned();
         };

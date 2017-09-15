@@ -78,7 +78,8 @@ mod feature {
     use conrod::backend::glium::glium::Surface;
     const WIN_W: u32 = 600;
     const WIN_H: u32 = 800;
-    const CONNECTION: &'static str = "ws://ec2-35-157-160-241.eu-central-1.compute.amazonaws.com:8080/greed";
+    // const CONNECTION: &'static str = "ws://ec2-35-157-160-241.eu-central-1.compute.amazonaws.com:8080/greed";
+    const CONNECTION: &'static str = "ws://127.0.0.1:8080";
     use feature::futures::{Future, Sink};
     use self::conrod_chat::backend::websocket::client;
     use self::conrod_chat::chat;
@@ -130,7 +131,6 @@ mod feature {
         let events_loop_proxy = events_loop.create_proxy();
         let mut last_update = std::time::Instant::now();
         let (futures_tx, futures_rx) = futures::sync::mpsc::channel(1);
-        let futures_tx_clone = futures_tx.clone();
         let futures_tx_clone2 = futures_tx.clone();
         let (proxy_action_tx, proxy_action_rx) = std::sync::mpsc::channel();
         let mut history = vec![];
@@ -155,6 +155,7 @@ mod feature {
                                                          sender,
                                                          message }) =
                                 app::ReceivedMsg::deserialize_receive(&z) {
+                                    println!("z {:?}",z.clone());
                                 if let (Some(Some(_type_name)),
                                         Some(Some(_location)),
                                         Some(Some(_sender)),
@@ -189,22 +190,7 @@ mod feature {
                              render_tx,
                              events_loop_proxy);
         });
-        std::thread::spawn(move || {
-            let o = "{chat:'hello',location:'lobby'}";
-            let mut c = 0;
-            'update: loop {
-                if c > 2 {
-                    break 'update;
-                }
-                futures_tx_clone.clone()
-                    .send(websocket::Message::text(o))
-                    .wait()
-                    .unwrap();
-                let five_sec = std::time::Duration::from_secs(5);
-                std::thread::sleep(five_sec);
-                c += 1;
-            }
-        });
+
         let (proxy_tx, proxy_rx) = std::sync::mpsc::channel();
         let event_tx_clone_2 = event_tx.clone();
         std::thread::spawn(move || 'proxy: loop {
@@ -214,11 +200,11 @@ mod feature {
                                }
                                // send to Websocket
                                while let Ok(s) = proxy_action_rx.try_recv() {
-                                       futures_tx_clone2.clone()
-                                           .send(websocket::Message::text(s))
-                                           .wait()
-                                           .unwrap();
-                                   
+                                   futures_tx_clone2.clone()
+                                       .send(websocket::Message::text(s))
+                                       .wait()
+                                       .unwrap();
+
                                }
                            });
         std::thread::spawn(move || { client::run(CONNECTION, proxy_tx, futures_rx); });

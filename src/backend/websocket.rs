@@ -5,7 +5,7 @@ pub mod client {
     use futures::sink::Sink;
     use futures::stream::Stream;
     use futures::sync::mpsc;
-    use websocket::{ClientBuilder};
+    use websocket::ClientBuilder;
     pub use websocket::OwnedMessage;
     pub use websocket::Message;
     pub fn run<'a>(con: &'static str,
@@ -48,5 +48,43 @@ pub mod client {
         core.run(runner).unwrap();
     }
 
- 
+    pub fn run_owned_message(con: &'static str,
+                             gui: std::sync::mpsc::Sender<OwnedMessage>,
+                             rx: mpsc::Receiver<OwnedMessage>) {
+        let mut core = Core::new().unwrap();
+        let runner = ClientBuilder::new(con)
+            .unwrap()
+            .add_protocol("rust-websocket")
+            .async_connect_insecure(&core.handle())
+            .and_then(move |(duplex, _)| {
+                let (to_server, from_server) = duplex.split();
+                let reader = from_server.for_each(move |msg| {
+                    // ... convert it to a string for display in the GUI...
+                    let content = match msg {
+                        OwnedMessage::Close(e) => Some(OwnedMessage::Close(e)),
+                        OwnedMessage::Ping(d) => Some(OwnedMessage::Ping(d)),
+                        OwnedMessage::Text(f) => {
+                            gui.send(OwnedMessage::Text(f)).unwrap();
+                            None
+                        }
+                        _ => None,
+                    };
+                    // ... and send that string _to_ the GUI.
+
+                    Ok(())
+                });
+                let writer = rx
+            .map_err(|()| unreachable!("rx can't fail"))
+            .fold(to_server, |to_server, msg| {
+                let h= msg.clone();
+                 to_server.send(h)
+            })
+            .map(|_| ());
+
+                // Use select to allow either the reading or writing half dropping to drop the other
+                // half. The `map` and `map_err` here effectively force this drop.
+                reader.select(writer).map(|_| ()).map_err(|(err, _)| err)
+            });
+        core.run(runner).unwrap();
+    }
 }

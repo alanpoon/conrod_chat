@@ -38,7 +38,7 @@ impl<T> ChatInstance<T>
     }
     pub fn run(&mut self,
                ui: &mut conrod::Ui,
-               history:&mut Vec<chatview::Message>,
+               history: &mut Vec<chatview::Message>,
                event_rx: std::sync::mpsc::Receiver<ConrodMessage<T>>,
                action_tx: std::sync::mpsc::Sender<String>,
                render_tx: std::sync::mpsc::Sender<conrod::render::OwnedPrimitives>,
@@ -116,9 +116,12 @@ impl<T> ChatInstance<T>
                 .set(ids.chatview, ui);
     }
 }
-fn process(name:&str,text:&str)->String{
-        let g = format!("{{chat:{},location:'lobby'}}",text);
-        g
+fn process(name: &str, text: &str) -> String {
+    let g = json!({
+  "chat": text,
+  "location":"lobby"
+});
+    g.to_string()
 }
 #[derive(Clone,Debug)]
 pub enum ConrodMessage<T: Clone> {

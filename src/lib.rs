@@ -3,6 +3,8 @@ extern crate conrod;
 #[macro_use]
 extern crate conrod_derive;
 #[macro_use]
+extern crate serde_json;
+#[macro_use]
 pub mod custom_widget;
 extern crate futures;
 extern crate tokio_core;

@@ -3,8 +3,8 @@ use conrod::{self, widget, Colorable, Labelable, Positionable, Widget, image, Si
 use dyapplication as application;
 #[cfg(not(feature="hotload"))]
 use staticapplication as application;
-use custom_widget::{chatview,item_history};
-use futures::{Future,Sink};
+use custom_widget::{chatview, item_history};
+use futures::{Future, Sink};
 use futures::sync::mpsc;
 
 /// The type upon which we'll implement the `Widget` trait.
@@ -24,7 +24,7 @@ pub struct ChatView<'a, T> {
     pub action_tx: mpsc::Sender<T>,
     pub image_id: Option<conrod::image::Id>,
     pub name: &'a String,
-    pub closure:Box<fn(&String,&String)->T>,
+    pub closure: Box<fn(&String, &String) -> T>,
     enabled: bool,
 }
 
@@ -62,7 +62,7 @@ pub struct State {
     pub ids: Ids,
 }
 
-impl<'a,T> ChatView<'a, T> {
+impl<'a, T> ChatView<'a, T> {
     /// Create a button context to be built upon.
     pub fn new(lists: &'a mut Vec<chatview::Message>,
                te: &'a mut String,
@@ -70,7 +70,7 @@ impl<'a,T> ChatView<'a, T> {
                image_id: Option<conrod::image::Id>,
                name: &'a String,
                action_tx: mpsc::Sender<T>,
-               closure:Box<fn(&String,& String)->T>)
+               closure: Box<fn(&String, &String) -> T>)
                -> Self {
         ChatView {
             lists: lists,
@@ -81,7 +81,7 @@ impl<'a,T> ChatView<'a, T> {
             image_id: image_id,
             name: name,
             action_tx: action_tx,
-            closure:closure,
+            closure: closure,
             enabled: true,
         }
     }
@@ -138,12 +138,12 @@ impl<'a, T> Widget for ChatView<'a, T> {
                           widget::Canvas::new().color(color::GREEN).pad_bottom(20.0)),
                          (state.ids.text_edit_body,
                           widget::Canvas::new()
-                              .length(h_can *0.2)
+                              .length(h_can * 0.2)
                               .flow_right(&[(state.ids.text_edit_panel,
                                              widget::Canvas::new()
                                                  .scroll_kids_vertically()
                                                  .color(color::DARK_CHARCOAL)
-                                                 .length(w_can*0.7)),
+                                                 .length(w_can * 0.7)),
                                             (state.ids.text_edit_button_panel,
                                              widget::Canvas::new()
                                                  .color(color::DARK_CHARCOAL))]))])
@@ -161,22 +161,25 @@ impl<'a, T> Widget for ChatView<'a, T> {
             .set(state.ids.text_edit, ui) {
             *k = edit;
         }
-          let button_panel = ui.rect_of(state.ids.text_edit_button_panel).unwrap();
+        let button_panel = ui.rect_of(state.ids.text_edit_button_panel).unwrap();
         let w_button_panel = button_panel.w();
         let h_button_panel = button_panel.h();
         if widget::Button::new()
                .color(color::GREY)
-               .padded_w_of(state.ids.text_edit_button_panel,0.2*w_button_panel)
-               .padded_h_of(state.ids.text_edit_button_panel,0.2*h_button_panel)
+               .padded_w_of(state.ids.text_edit_button_panel, 0.2 * w_button_panel)
+               .padded_h_of(state.ids.text_edit_button_panel, 0.2 * h_button_panel)
                .label("Enter")
                .middle_of(state.ids.text_edit_button_panel)
                .set(state.ids.text_edit_button, ui)
                .was_clicked() {
-          //  let mut g ="".to_string();
-           // let g = format!("{{chat:{},location:'lobby'}}",k);
-           let kc= k.clone();
-            let g= (*self.closure)(self.name,&kc);
-            self.action_tx.send(g).wait().unwrap();
+            //  let mut g ="".to_string();
+            // let g = format!("{{chat:{},location:'lobby'}}",k);
+            let kc = k.clone();
+            let g = (*self.closure)(self.name, &kc);
+            self.action_tx
+                .send(g)
+                .wait()
+                .unwrap();
             *k = "".to_owned();
         };
         widget::Scrollbar::y_axis(state.ids.text_edit_panel)
