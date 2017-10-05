@@ -14,7 +14,8 @@ pub mod client {
     }
     pub fn run<'a>(con: &'static str,
                    gui: std::sync::mpsc::Sender<Message<'a>>,
-                   rx: mpsc::Receiver<Message<'a>>) {
+                   rx: mpsc::Receiver<Message<'a>>)
+                   -> Result<(), String> {
         println!("run");
         let gui_c = gui.clone();
         match ClientBuilder::new(con) {
@@ -55,16 +56,19 @@ pub mod client {
                     Ok(_) => {
                         println!("connected");
                         gui.clone().send(Message::text("connected")).unwrap();
+                        Ok(())
                     }
                     Err(_er) => {
                         println!("{:?}", _er);
                         let f = format!("{}", _er);
-                        gui.clone().send(Message::text(f)).unwrap();
+                        gui.clone().send(Message::text(f.clone())).unwrap();
+                        Err(f)
                     }
                 }
             }
             Err(er) => {
-                gui.clone().send(Message::text(er.description().to_owned())).unwrap();
+                gui.clone().send(Message::text(er.clone().description().to_owned())).unwrap();
+                Err(er.description().to_owned())
             }
         }
 

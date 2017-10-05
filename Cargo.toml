@@ -25,3 +25,5 @@ serde_json = "1.0"
 image = "0.15.0"
 find_folder = "0.3.0"
 serde_derive ="1.0"
+hardback_server_lib = {path = "../hardback_server_lib"}
+toa-ping ={path="../toa-ping"}
