@@ -81,11 +81,17 @@ mod feature {
     // const CONNECTION: &'static str = "ws://ec2-35-157-160-241.eu-central-1.compute.amazonaws.com:8080/greed";
     const CONNECTION: &'static str = "ws://127.0.0.1:8080";
     use feature::futures::{Future, Sink};
+    use feature;
     use self::conrod_chat::backend::websocket::client;
     use self::conrod_chat::chat;
     use std;
     use app;
-
+    pub struct ProcessSendStruct(std::sync::mpsc::Sender<feature::websocket::Message<'a>>);
+    impl client::ProcessSender for ProcessSendStruct {
+        fn process(&self, s: String) {
+            self.0.send(2).unwrap();
+        }
+    }
     pub fn main() {
         // Build the window.
         let mut events_loop = glium::glutin::EventsLoop::new();
@@ -209,7 +215,8 @@ mod feature {
                            });
         std::thread::spawn(move || {
                                println!("before connection");
-                               client::run(CONNECTION, proxy_tx, futures_rx);
+                               let proxy_tx_k = ProcessSendStruct(proxy_tx);
+                               client::run_with_trait(CONNECTION, proxy_tx_k, futures_rx);
                            });
 
         let mut closed = false;

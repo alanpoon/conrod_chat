@@ -19,5 +19,3 @@ pub mod staticapplication;
 pub mod chat;
 pub mod app;
 pub mod backend;
-#[cfg(test)]
-mod tests;
