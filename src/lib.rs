@@ -6,6 +6,9 @@ extern crate conrod_derive;
 extern crate serde_json;
 #[macro_use]
 pub mod custom_widget;
+#[macro_use]
+extern crate serde_derive;
+extern crate serde;
 extern crate futures;
 extern crate tokio_core;
 #[cfg(feature="web_socket")]
