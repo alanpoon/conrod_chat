@@ -25,7 +25,20 @@ default = ["web_socket","backend_glium_winit"]
 serde="1.0"
 serde_json = "1.0"
 image = "0.15.0"
-find_folder = "0.3.0"
 serde_derive ="1.0"
 hardback_server_lib = {path = "../hardback_server_lib"}
 toa-ping ={path="../toa-ping"}
+
+[package.metadata.android]
+package_name = "com.github.apoon1.conrod-chat"
+label = "Conrod Chat"
+android_version = 19
+build_targets = ["arm-linux-androideabi"]
+assets = "assets"
+
+[target.'cfg(target_os="android")'.dev-dependencies]
+android_glue = "0.2.3"
+rusttype = "*"
+
+[target.'cfg(not(target_os="android"))'.dev-dependencies]
+find_folder = "0.3.0"

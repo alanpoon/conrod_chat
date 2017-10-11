@@ -25,4 +25,7 @@ cargo run --example websocket_glium
 ```
 
 
-
+android
+cargo apk build --example run
+-L ~/software/openssl-1.0.2l/libcrypto.a -l ssl -lcryto
+adb install -r target/android-artifacts/app/build/outputs/apk/app-debug.apk

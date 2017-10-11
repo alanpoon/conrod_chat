@@ -9,7 +9,9 @@ pub mod client {
     pub use websocket::OwnedMessage;
     pub use websocket::Message;
     use std::error::Error;
+    use serde_json;
     #[derive(Serialize,Deserialize)]
+    #[serde(tag = "connection_status", content = "c")]
     pub enum ConnectionStatus {
         Error(ConnectionError),
         Ok,
@@ -65,15 +67,16 @@ pub mod client {
                     Ok(_) => {
                         println!("connected");
                         let g = json!({
-                            "connection_status":ConnectionStatus::Ok
-                        });
+                                          "connection_status": ConnectionStatus::Ok
+                                      });
                         gui.clone().send(Message::text(g.to_string())).unwrap();
                         Ok(())
                     }
                     Err(_er) => {
                         let g = json!({
-                            "connection_status":ConnectionStatus::Error(ConnectionError::CannotFindServer)
-                        });
+                                          "connection_status":
+                                          ConnectionStatus::Error(ConnectionError::CannotFindServer)
+                                      });
                         gui.clone().send(Message::text(g.to_string())).unwrap();
                         Err(ConnectionError::CannotFindServer)
                     }
@@ -132,17 +135,13 @@ pub mod client {
                 match core.run(runner) {
                     Ok(_) => {
                         println!("connected");
-                        let g = json!({
-                            "connection_status":ConnectionStatus::Ok
-                        });
-                        gui.clone().send(OwnedMessage::Text(g.to_string())).unwrap();
+                        let g = serde_json::to_string(&ConnectionStatus::Ok).unwrap();
+                        gui.clone().send(OwnedMessage::Text(g)).unwrap();
                         Ok(())
                     }
                     Err(_er) => {
-                        let g = json!({
-                            "connection_status":ConnectionStatus::Error(ConnectionError::CannotFindServer)
-                        });
-                        gui.clone().send(OwnedMessage::Text(g.to_string())).unwrap();
+                        let g = serde_json::to_string(&ConnectionStatus::Error(ConnectionError::CannotFindServer)).unwrap();
+                        gui.clone().send(OwnedMessage::Text(g)).unwrap();
                         Err(ConnectionError::CannotFindServer)
                     }
                 }
