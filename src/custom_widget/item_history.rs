@@ -1,8 +1,4 @@
 use conrod::{self, widget, Colorable, Positionable, Widget, Sizeable, color};
-#[cfg(feature="hotload")]
-use dyapplication as application;
-#[cfg(not(feature="hotload"))]
-use staticapplication as application;
 use custom_widget::chatview::Message;
 use std;
 /// The type upon which we'll implement the `Widget` trait.
@@ -18,22 +14,19 @@ pub struct ItemHistory<'a> {
     /// Whether the button is currently enabled, i.e. whether it responds to
     /// user input.
     enabled: bool,
-    pub static_style: &'a application::Static_Style,
 }
 
 #[derive(Copy, Clone, Debug, Default, PartialEq, WidgetStyle)]
 pub struct Style {
-    /// Color of the button's label.
-    #[conrod(default = "theme.shape_color")]
-    pub color: Option<conrod::Color>,
-    #[conrod(default = "theme.label_color")]
-    pub label_color: Option<conrod::Color>,
-    /// Font size of the button's label.
-    #[conrod(default = "theme.font_size_medium")]
-    pub label_font_size: Option<conrod::FontSize>,
-    /// Specify a unique font for the label.
-    #[conrod(default = "theme.font_id")]
-    pub label_font_id: Option<Option<conrod::text::font::Id>>,
+    #[conrod(default="(color::BLUE,[200.0,30.0,2.0])")]
+    pub item_rect: Option<(conrod::Color, [f64; 3])>, //w,h, pad bottom
+    #[conrod(default="[20.0,20.0,5.0,5.0]")]
+    pub item_image: Option<[f64; 4]>, // w,h,l,t
+    #[conrod(default="(theme.label_color,theme.font_id,theme.font_size_medium,[100.0,50.0,22.0,5.0])")]
+    pub item_text: Option<(conrod::Color,
+                               Option<conrod::text::font::Id>,
+                               conrod::FontSize,
+                               [f64; 4])>, //RGB,w,h,l,t
 }
 
 widget_ids! {
@@ -52,20 +45,13 @@ pub struct State {
 
 impl<'a> ItemHistory<'a> {
     /// Create a button context to be built upon.
-    pub fn new(message: &'a Message, static_style: &'a application::Static_Style) -> Self {
+    pub fn new(message: &'a Message) -> Self {
         ItemHistory {
             message: message,
             common: widget::CommonBuilder::default(),
             style: Style::default(),
             enabled: true,
-            static_style: static_style,
         }
-    }
-
-    /// Specify the font used for displaying the label.
-    pub fn label_font_id(mut self, font_id: conrod::text::font::Id) -> Self {
-        self.style.label_font_id = Some(Some(font_id));
-        self
     }
 
     /// If true, will allow user inputs.  If false, will disallow user inputs.  Like
@@ -75,6 +61,11 @@ impl<'a> ItemHistory<'a> {
     pub fn enabled(mut self, flag: bool) -> Self {
         self.enabled = flag;
         self
+    }
+    builder_methods!{
+        pub item_rect { style.item_rect = Some((conrod::Color,[f64;3])) }
+        pub item_image { style.item_image = Some([f64;4]) }
+        pub item_text { style.item_text = Some((conrod::Color,Option<conrod::text::font::Id>,conrod::FontSize,[f64;4])) }
     }
 }
 
@@ -105,18 +96,18 @@ impl<'a> Widget for ItemHistory<'a> {
         // Finally, we'll describe how we want our widget drawn by simply instantiating the
         // necessary primitive graphics widgets.
         //
-        let static_style = self.static_style;
-        let application::RGB(rr, rg, rb, ra) = static_style.rect.0;
-        widget::Rectangle::outline([static_style.rect.1, static_style.rect.2])
-            .align_left_of(id)
-            .color(color::Color::Rgba(rr, rg, rb, ra))
-            .set(state.ids.rect, ui);
+        widget::Rectangle::outline([style.item_rect(&ui.theme).1[0],
+                                    style.item_rect(&ui.theme).1[1]])
+                .align_left_of(id)
+                .color(style.item_rect(&ui.theme).0)
+                .set(state.ids.rect, ui);
         if let Some(k) = self.message.image_id {
             widget::Image::new(k)
                 .top_left_with_margins_on(state.ids.rect,
-                                          static_style.image.4,
-                                          static_style.image.3)
-                .w_h(static_style.image.1, static_style.image.2)
+                                          style.item_image(&ui.theme)[3],
+                                          style.item_image(&ui.theme)[2])
+                .w_h(style.item_image(&ui.theme)[0],
+                     style.item_image(&ui.theme)[1])
                 .set(state.ids.display_pic, ui);
         }
 
@@ -124,13 +115,14 @@ impl<'a> Widget for ItemHistory<'a> {
         z.push_str(" : ");
         z.push_str(&self.message.text);
         // Now we'll instantiate our label using the **Text** widget.
-        let application::RGB(tr, tg, tb, ta) = static_style.text.1;
-        let font_id = style.label_font_id(&ui.theme).or(ui.fonts.ids().next());
+        let font_id = style.item_text(&ui.theme).1.or(ui.fonts.ids().next());
         widget::Text::new(&z)
             .and_then(font_id, widget::Text::font_id)
-            .top_left_with_margins_on(state.ids.rect, static_style.text.5, static_style.text.4)
-            .font_size(static_style.text.0)
-            .color(color::Color::Rgba(tr, tg, tb, ta))
+            .top_left_with_margins_on(state.ids.rect,
+                                      style.item_text(&ui.theme).3[3],
+                                      style.item_text(&ui.theme).3[2])
+            .font_size(style.item_text(&ui.theme).2)
+            .color(style.item_text(&ui.theme).0)
             .set(state.ids.text, ui);
         Some(())
     }

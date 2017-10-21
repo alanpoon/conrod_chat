@@ -1,9 +1,7 @@
 use conrod::{self, widget, Colorable, Labelable, Positionable, Widget, image, Sizeable, color};
-#[cfg(feature="hotload")]
-use dyapplication as application;
-#[cfg(not(feature="hotload"))]
-use staticapplication as application;
 use custom_widget::item_history;
+use conrod_keypad::custom_widget::text_edit::TextEdit;
+use conrod_keypad::english;
 use std::sync::mpsc;
 /// The type upon which we'll implement the `Widget` trait.
 #[derive(WidgetCommon)]
@@ -14,11 +12,12 @@ pub struct ChatView<'a> {
     common: widget::CommonBuilder,
     pub lists: &'a mut Vec<Message>,
     pub text_edit: &'a mut String,
+    pub master_id: widget::Id,
+    pub english_tuple: &'a (Vec<english::KeyButton>, Vec<english::KeyButton>, english::KeyButton),
     /// See the Style struct below.
     style: Style,
     /// Whether the button is currently enabled, i.e. whether it responds to
     /// user input.
-    pub static_style: application::Static_Style,
     pub action_tx: mpsc::Sender<String>,
     pub image_id: Option<conrod::image::Id>,
     pub name: &'a String,
@@ -34,17 +33,8 @@ pub struct Message {
 
 #[derive(Copy, Clone, Debug, Default, PartialEq, WidgetStyle)]
 pub struct Style {
-    /// Color of the button's label.
-    #[conrod(default = "theme.shape_color")]
-    pub color: Option<conrod::Color>,
-    #[conrod(default = "theme.label_color")]
-    pub label_color: Option<conrod::Color>,
-    /// Font size of the button's label.
-    #[conrod(default = "theme.font_size_medium")]
-    pub label_font_size: Option<conrod::FontSize>,
-    /// Specify a unique font for the label.
-    #[conrod(default = "theme.font_id")]
-    pub label_font_id: Option<Option<conrod::text::font::Id>>,
+    #[conrod(default="[200.0,30.0]")]
+    pub item_rect: Option<[f64; 2]>, //w,h, pad bottom
 }
 
 widget_ids! {
@@ -70,7 +60,10 @@ impl<'a> ChatView<'a> {
     /// Create a button context to be built upon.
     pub fn new(lists: &'a mut Vec<Message>,
                te: &'a mut String,
-               static_s: application::Static_Style,
+               master_id: widget::Id,
+               english_tuple: &'a (Vec<english::KeyButton>,
+                                   Vec<english::KeyButton>,
+                                   english::KeyButton),
                image_id: Option<conrod::image::Id>,
                name: &'a String,
                action_tx: mpsc::Sender<String>,
@@ -81,19 +74,14 @@ impl<'a> ChatView<'a> {
             common: widget::CommonBuilder::default(),
             text_edit: te,
             style: Style::default(),
-            static_style: static_s,
+            master_id: master_id,
+            english_tuple: english_tuple,
             image_id: image_id,
             name: name,
             action_tx: action_tx,
             closure: closure,
             enabled: true,
         }
-    }
-
-    /// Specify the font used for displaying the label.
-    pub fn label_font_id(mut self, font_id: conrod::text::font::Id) -> Self {
-        self.style.label_font_id = Some(Some(font_id));
-        self
     }
 
     /// If true, will allow user inputs.  If false, will disallow user inputs.  Like
@@ -129,8 +117,7 @@ impl<'a> Widget for ChatView<'a> {
     /// Update the state of the button by handling any input that has occurred since the last
     /// update.
     fn update(self, args: widget::UpdateArgs<Self>) -> Option<()> {
-        let widget::UpdateArgs { id, state, mut ui, .. } = args;
-        let static_style = self.static_style;
+        let widget::UpdateArgs { id, state, mut ui, style, .. } = args;
         // Finally, we'll describe how we want our widget drawn by simply instantiating the
         // necessary primitive graphics widgets.
         //
@@ -197,9 +184,8 @@ impl<'a> Widget for ChatView<'a> {
         }
         let mut it_j = self.lists.iter();
         while let (Some(a), Some(item)) = (it_j.next(), items.next(ui)) {
-            let cb =
-                item_history::ItemHistory::new(&a, &static_style).w_h(static_style.w_h.0,
-                                                                      static_style.w_h.1);
+            let cb = item_history::ItemHistory::new(&a).w_h(style.item_rect(&ui.theme)[0],
+                                                            style.item_rect(&ui.theme)[1]);
             item.set(cb, ui);
         }
         Some(())

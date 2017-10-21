@@ -1,9 +1,7 @@
-use conrod::{self, widget, Colorable, Labelable, Positionable, Widget, image, Sizeable, color};
-#[cfg(feature="hotload")]
-use dyapplication as application;
-#[cfg(not(feature="hotload"))]
-use staticapplication as application;
+use conrod::{self, widget, Colorable, Positionable, Widget, image, Sizeable, color, Labelable};
 use custom_widget::{chatview, item_history};
+use conrod_keypad::custom_widget::text_edit::TextEdit;
+use conrod_keypad::english;
 use futures::{Future, Sink};
 use futures::sync::mpsc;
 
@@ -16,11 +14,12 @@ pub struct ChatView<'a, T> {
     common: widget::CommonBuilder,
     pub lists: &'a mut Vec<chatview::Message>,
     pub text_edit: &'a mut String,
+    pub master_id: widget::Id,
+    pub english_tuple: &'a (Vec<english::KeyButton>, Vec<english::KeyButton>, english::KeyButton),
     /// See the Style struct below.
     style: Style,
     /// Whether the button is currently enabled, i.e. whether it responds to
     /// user input.
-    pub static_style: application::Static_Style,
     pub action_tx: mpsc::Sender<T>,
     pub image_id: Option<conrod::image::Id>,
     pub name: &'a String,
@@ -30,17 +29,8 @@ pub struct ChatView<'a, T> {
 
 #[derive(Copy, Clone, Debug, Default, PartialEq, WidgetStyle)]
 pub struct Style {
-    /// Color of the button's label.
-    #[conrod(default = "theme.shape_color")]
-    pub color: Option<conrod::Color>,
-    #[conrod(default = "theme.label_color")]
-    pub label_color: Option<conrod::Color>,
-    /// Font size of the button's label.
-    #[conrod(default = "theme.font_size_medium")]
-    pub label_font_size: Option<conrod::FontSize>,
-    /// Specify a unique font for the label.
-    #[conrod(default = "theme.font_id")]
-    pub label_font_id: Option<Option<conrod::text::font::Id>>,
+    #[conrod(default="[200.0,30.0]")]
+    pub item_rect: Option<[f64; 2]>, //w,h, pad bottom
 }
 
 widget_ids! {
@@ -66,7 +56,10 @@ impl<'a, T> ChatView<'a, T> {
     /// Create a button context to be built upon.
     pub fn new(lists: &'a mut Vec<chatview::Message>,
                te: &'a mut String,
-               static_s: application::Static_Style,
+               master_id: widget::Id,
+               english_tuple: &'a (Vec<english::KeyButton>,
+                                   Vec<english::KeyButton>,
+                                   english::KeyButton),
                image_id: Option<conrod::image::Id>,
                name: &'a String,
                action_tx: mpsc::Sender<T>,
@@ -76,20 +69,15 @@ impl<'a, T> ChatView<'a, T> {
             lists: lists,
             common: widget::CommonBuilder::default(),
             text_edit: te,
+            master_id: master_id,
+            english_tuple: english_tuple,
             style: Style::default(),
-            static_style: static_s,
             image_id: image_id,
             name: name,
             action_tx: action_tx,
             closure: closure,
             enabled: true,
         }
-    }
-
-    /// Specify the font used for displaying the label.
-    pub fn label_font_id(mut self, font_id: conrod::text::font::Id) -> Self {
-        self.style.label_font_id = Some(Some(font_id));
-        self
     }
 
     /// If true, will allow user inputs.  If false, will disallow user inputs.  Like
@@ -99,6 +87,9 @@ impl<'a, T> ChatView<'a, T> {
     pub fn enabled(mut self, flag: bool) -> Self {
         self.enabled = flag;
         self
+    }
+    builder_methods!{
+        pub item_rect { style.item_rect = Some([f64;2]) }
     }
 }
 
@@ -126,7 +117,6 @@ impl<'a, T> Widget for ChatView<'a, T> {
     /// update.
     fn update(self, args: widget::UpdateArgs<Self>) -> Option<()> {
         let widget::UpdateArgs { id, state, mut ui, style, .. } = args;
-        let static_style = self.static_style;
         // Finally, we'll describe how we want our widget drawn by simply instantiating the
         // necessary primitive graphics widgets.
         //
@@ -151,7 +141,7 @@ impl<'a, T> Widget for ChatView<'a, T> {
             .set(state.ids.chat_canvas, ui);
 
         let mut k = self.text_edit;
-        for edit in widget::TextEdit::new(k)
+        for edit in TextEdit::new(k,self.master_id,self.english_tuple)
             .color(color::GREY)
             .padded_w_of(state.ids.text_edit_panel, 20.0)
             .mid_top_of(state.ids.text_edit_panel)
@@ -197,9 +187,8 @@ impl<'a, T> Widget for ChatView<'a, T> {
         }
         let mut it_j = self.lists.iter();
         while let (Some(a), Some(item)) = (it_j.next(), items.next(ui)) {
-            let cb =
-                item_history::ItemHistory::new(&a, &static_style).w_h(static_style.w_h.0,
-                                                                      static_style.w_h.1);
+            let cb = item_history::ItemHistory::new(&a).w_h(style.item_rect(&ui.theme)[0],
+                                                            style.item_rect(&ui.theme)[1]);
             item.set(cb, ui);
         }
         Some(())
