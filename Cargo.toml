@@ -6,7 +6,7 @@ authors = ["alanpoon"]
 [dependencies]
 conrod = { version="0.56.0", features = ["glium","winit"]}
 conrod_derive = "0.1.0"
-conrod_keypad = {git="https://github.com/alanpoon/Conrod_KeyPad.git", rev="4dd337dd34acf114d84f095a844522f39ebe4d36"}
+conrod_keypad = {git="https://github.com/alanpoon/Conrod_KeyPad.git", rev="e41b870dfa71bab3bd82b91024255d8948deb996"}
 websocket = { version ="0.20.2",optional=true}
 futures ={ version = "0.1.14", features=["use_std"] }
 tokio-core ="0.1.9"

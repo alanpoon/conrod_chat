@@ -20,7 +20,7 @@ pub struct ItemHistory<'a> {
 pub struct Style {
     #[conrod(default="(color::BLUE,[200.0,30.0,2.0])")]
     pub item_rect: Option<(conrod::Color, [f64; 3])>, //w,h, pad bottom
-    #[conrod(default="[20.0,20.0,5.0,5.0]")]
+    #[conrod(default="[20.0,20.0,10.0,10.0]")]
     pub item_image: Option<[f64; 4]>, // w,h,l,t
     #[conrod(default="(theme.label_color,theme.font_id,theme.font_size_medium,[100.0,50.0,22.0,5.0])")]
     pub item_text: Option<(conrod::Color,
@@ -35,6 +35,7 @@ widget_ids! {
         name,
         text,
         rect,
+        scrollbar
     }
 }
 
@@ -92,38 +93,48 @@ impl<'a> Widget for ItemHistory<'a> {
     /// Update the state of the button by handling any input that has occurred since the last
     /// update.
     fn update(self, args: widget::UpdateArgs<Self>) -> std::option::Option<()> {
-        let widget::UpdateArgs { id, state, rect, mut ui, style, .. } = args;
+        let widget::UpdateArgs { id, state, ui, rect, style, .. } = args;
         // Finally, we'll describe how we want our widget drawn by simply instantiating the
         // necessary primitive graphics widgets.
         //
-        widget::Rectangle::outline([style.item_rect(&ui.theme).1[0],
-                                    style.item_rect(&ui.theme).1[1]])
-                .align_left_of(id)
-                .color(style.item_rect(&ui.theme).0)
-                .set(state.ids.rect, ui);
+        let mut z = self.message.name.clone();
+        z.push_str(": ");
         if let Some(k) = self.message.image_id {
             widget::Image::new(k)
-                .top_left_with_margins_on(state.ids.rect,
+                .top_left_with_margins_on(id,
                                           style.item_image(&ui.theme)[3],
                                           style.item_image(&ui.theme)[2])
                 .w_h(style.item_image(&ui.theme)[0],
                      style.item_image(&ui.theme)[1])
                 .set(state.ids.display_pic, ui);
         }
-
-        let mut z = self.message.name.clone();
-        z.push_str(" : ");
-        z.push_str(&self.message.text);
+        widget::Text::new(&z)
+            .top_left_with_margins_on(id,
+                                      style.item_image(&ui.theme)[3],
+                                      style.item_image(&ui.theme)[2] +
+                                      style.item_image(&ui.theme)[0])
+            .w(120.0)
+            .set(state.ids.name, ui);
+        let rect_w = rect.w() - 140.0 - style.item_image(&ui.theme)[2] +
+                     style.item_image(&ui.theme)[0];
+        widget::Rectangle::outline([rect_w, rect.h()])
+            .right_from(state.ids.name, 0.0)
+            .color(style.item_rect(&ui.theme).0)
+            .scroll_kids_vertically()
+            .set(state.ids.rect, ui);
         // Now we'll instantiate our label using the **Text** widget.
         let font_id = style.item_text(&ui.theme).1.or(ui.fonts.ids().next());
-        widget::Text::new(&z)
-            .and_then(font_id, widget::Text::font_id)
+        widget::text_edit::TextEdit::new(&self.message.text)
+            .font_id(font_id.unwrap())
             .top_left_with_margins_on(state.ids.rect,
                                       style.item_text(&ui.theme).3[3],
                                       style.item_text(&ui.theme).3[2])
             .font_size(style.item_text(&ui.theme).2)
             .color(style.item_text(&ui.theme).0)
+            .restrict_to_height(false)
             .set(state.ids.text, ui);
+        widget::Scrollbar::y_axis(state.ids.rect).auto_hide(false).set(state.ids.scrollbar, ui);
+
         Some(())
     }
 }

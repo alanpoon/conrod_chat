@@ -1,4 +1,3 @@
-use custom_widget::chatview;
 use conrod;
 use std::time::Instant;
 pub mod message {

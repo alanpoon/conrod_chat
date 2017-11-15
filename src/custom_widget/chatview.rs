@@ -104,7 +104,7 @@ impl<'a> Widget for ChatView<'a> {
     /// The event produced by instantiating the widget.
     ///
     /// `Some` when clicked, otherwise `None`.
-    type Event = Option<()>;
+    type Event = bool;
 
     fn init_state(&self, id_gen: widget::id::Generator) -> Self::State {
         State { ids: Ids::new(id_gen) }
@@ -116,8 +116,8 @@ impl<'a> Widget for ChatView<'a> {
 
     /// Update the state of the button by handling any input that has occurred since the last
     /// update.
-    fn update(self, args: widget::UpdateArgs<Self>) -> Option<()> {
-        let widget::UpdateArgs { id, state, mut ui, style, .. } = args;
+    fn update(self, args: widget::UpdateArgs<Self>) -> bool {
+        let widget::UpdateArgs { id, state, ui, style, .. } = args;
         // Finally, we'll describe how we want our widget drawn by simply instantiating the
         // necessary primitive graphics widgets.
         //
@@ -141,15 +141,16 @@ impl<'a> Widget for ChatView<'a> {
             .middle_of(id)
             .set(state.ids.chat_canvas, ui);
 
-        let mut k = self.text_edit;
-        for edit in widget::TextEdit::new(k)
+        let k = self.text_edit;
+        let (editz, keypad_bool) = TextEdit::new(k,self.master_id,self.english_tuple)
             .color(color::GREY)
             .padded_w_of(state.ids.text_edit_panel, 20.0)
             .mid_top_of(state.ids.text_edit_panel)
             .center_justify()
             .line_spacing(2.5)
             .restrict_to_height(false) // Let the height grow infinitely and scroll.
-            .set(state.ids.text_edit, ui) {
+            .set(state.ids.text_edit, ui);
+        for edit in editz {
             *k = edit;
         }
         let button_panel = ui.rect_of(state.ids.text_edit_button_panel).unwrap();
@@ -188,6 +189,6 @@ impl<'a> Widget for ChatView<'a> {
                                                             style.item_rect(&ui.theme)[1]);
             item.set(cb, ui);
         }
-        Some(())
+        keypad_bool
     }
 }

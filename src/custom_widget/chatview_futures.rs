@@ -1,4 +1,4 @@
-use conrod::{self, widget, Colorable, Positionable, Widget, image, Sizeable, color, Labelable};
+use conrod::{widget, Colorable, Positionable, Widget, image, Sizeable, color, Labelable};
 use custom_widget::{chatview, item_history};
 use conrod_keypad::custom_widget::text_edit::TextEdit;
 use conrod_keypad::english;
@@ -21,7 +21,7 @@ pub struct ChatView<'a, T> {
     /// Whether the button is currently enabled, i.e. whether it responds to
     /// user input.
     pub action_tx: mpsc::Sender<T>,
-    pub image_id: Option<conrod::image::Id>,
+    pub image_id: Option<image::Id>,
     pub name: &'a String,
     pub closure: Box<fn(&String, &String) -> T>,
     enabled: bool,
@@ -60,7 +60,7 @@ impl<'a, T> ChatView<'a, T> {
                english_tuple: &'a (Vec<english::KeyButton>,
                                    Vec<english::KeyButton>,
                                    english::KeyButton),
-               image_id: Option<conrod::image::Id>,
+               image_id: Option<image::Id>,
                name: &'a String,
                action_tx: mpsc::Sender<T>,
                closure: Box<fn(&String, &String) -> T>)
@@ -103,7 +103,7 @@ impl<'a, T> Widget for ChatView<'a, T> {
     /// The event produced by instantiating the widget.
     ///
     /// `Some` when clicked, otherwise `None`.
-    type Event = Option<()>;
+    type Event = bool;
 
     fn init_state(&self, id_gen: widget::id::Generator) -> Self::State {
         State { ids: Ids::new(id_gen) }
@@ -115,8 +115,8 @@ impl<'a, T> Widget for ChatView<'a, T> {
 
     /// Update the state of the button by handling any input that has occurred since the last
     /// update.
-    fn update(self, args: widget::UpdateArgs<Self>) -> Option<()> {
-        let widget::UpdateArgs { id, state, mut ui, style, .. } = args;
+    fn update(self, args: widget::UpdateArgs<Self>) -> bool {
+        let widget::UpdateArgs { id, state, ui, style, .. } = args;
         // Finally, we'll describe how we want our widget drawn by simply instantiating the
         // necessary primitive graphics widgets.
         //
@@ -140,15 +140,16 @@ impl<'a, T> Widget for ChatView<'a, T> {
             .middle_of(id)
             .set(state.ids.chat_canvas, ui);
 
-        let mut k = self.text_edit;
-        for edit in TextEdit::new(k,self.master_id,self.english_tuple)
+        let k = self.text_edit;
+        let (editz, keypad_bool) = TextEdit::new(k,self.master_id,self.english_tuple)
             .color(color::GREY)
             .padded_w_of(state.ids.text_edit_panel, 20.0)
             .mid_top_of(state.ids.text_edit_panel)
             .center_justify()
             .line_spacing(2.5)
             .restrict_to_height(false) // Let the height grow infinitely and scroll.
-            .set(state.ids.text_edit, ui) {
+            .set(state.ids.text_edit, ui);
+        for edit in editz {
             *k = edit;
         }
         let button_panel = ui.rect_of(state.ids.text_edit_button_panel).unwrap();
@@ -177,6 +178,7 @@ impl<'a, T> Widget for ChatView<'a, T> {
             .set(state.ids.text_edit_panel_scrollbar, ui);
         let num = self.lists.len();
         let (mut items, scrollbar) = widget::List::flow_down(num)
+            .item_size(60.0)
             .scrollbar_on_top()
             .middle_of(state.ids.message_panel)
             .wh_of(state.ids.message_panel)
@@ -191,6 +193,6 @@ impl<'a, T> Widget for ChatView<'a, T> {
                                                             style.item_rect(&ui.theme)[1]);
             item.set(cb, ui);
         }
-        Some(())
+        keypad_bool
     }
 }

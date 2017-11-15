@@ -38,7 +38,7 @@ pub mod client {
                 let (to_server, from_server) = duplex.split();
                 let reader = from_server.for_each(move |msg| {
                     // ... convert it to a string for display in the GUI...
-                    let content = match msg {
+                    let _content = match msg {
                         OwnedMessage::Close(e) => Some(Message::from(OwnedMessage::Close(e))),
                         OwnedMessage::Ping(d) => Some(Message::from(OwnedMessage::Ping(d))),
                         OwnedMessage::Text(f) => {
@@ -97,7 +97,7 @@ pub mod client {
         println!("run");
         let gui_c = gui.clone();
         match ClientBuilder::new(con) {
-            Ok(c) => {
+            Ok(_) => {
                 let mut core = Core::new().unwrap();
                 let runner = ClientBuilder::new(con)
             .unwrap()
@@ -107,7 +107,7 @@ pub mod client {
                 let (to_server, from_server) = duplex.split();
                 let reader = from_server.for_each(move |msg| {
                     // ... convert it to a string for display in the GUI...
-                    let content = match msg {
+                    let _content = match msg {
                         OwnedMessage::Close(e) => Some(OwnedMessage::Close(e)),
                         OwnedMessage::Ping(d) => Some(OwnedMessage::Ping(d)),
                         OwnedMessage::Text(f) => {
