@@ -14,19 +14,19 @@ extern crate hardback_codec;
 extern crate toa_ping;
 extern crate websocket;
 extern crate image;
-
+// run with --features "keypad"
 use conrod::{widget, color, Colorable, Widget, Positionable, Sizeable};
 use conrod::backend::glium::glium::{self, glutin, Surface};
 use conrod_chat::backend::websocket::client;
 use conrod_chat::custom_widget::chatview_futures;
 use conrod_chat::chat;
-use conrod_chat::chat::ConrodMessage;
+use conrod_chat::chat::{sprite, english, ConrodMessage};
 use hardback_codec::codec;
 use websocket::message::OwnedMessage;
 use std::sync::mpsc::{Sender, Receiver};
 use futures::sync::mpsc;
 use std::sync::{Arc, Mutex};
-const CONNECTION: &'static str = "ws://0.0.0.0:8080";
+const CONNECTION: &'static str = "ws://0.0.0.1:8080";
 
 pub struct GameApp {}
 widget_ids! {
@@ -116,7 +116,7 @@ impl GameApp {
         let mut c = 0;
         let mut ids = Ids::new(ui.widget_id_generator());
         let name = "alan".to_owned();
-
+        let english_tuple = english::populate(keypad_png, sprite::get_spriteinfo());
         let sixteen_ms = std::time::Duration::from_millis(100);
         let mut captured_event: Option<ConrodMessage> = None;
         let mut keypad_bool = false;
@@ -166,6 +166,8 @@ impl GameApp {
                                 [w as f64, h as f64],
                                 &mut lobby_history,
                                 &mut demo_text_edit,
+                                &english_tuple,
+                                &mut keypad_bool,
                                 &name,
                                 Some(rust_logo),
                                 proxy_action_tx.clone(),
@@ -177,6 +179,8 @@ impl GameApp {
                                 [w as f64, h as f64],
                                 &mut lobby_history,
                                 &mut demo_text_edit,
+                                &english_tuple,
+                                &mut keypad_bool,
                                 &name,
                                 Some(rust_logo),
                                 proxy_action_tx.clone(),
@@ -278,24 +282,34 @@ fn set_widgets(ui: &mut conrod::UiCell,
                dimension: [f64; 2],
                lobby_history: &mut Vec<chat::message::Message>,
                text_edit: &mut String,
+               english_tuple: &(Vec<english::KeyButton>,
+                                Vec<english::KeyButton>,
+                                english::KeyButton),
+               keypad_bool: &mut bool,
                name: &String,
                rust_logo: Option<conrod::image::Id>,
                action_tx: mpsc::Sender<OwnedMessage>,
                ids: &mut Ids) {
-
+    let (keypad_length, _) = if *keypad_bool {
+        (dimension[1] * 0.375, 400.0)
+    } else {
+        (0.0, 700.0)
+    };
     widget::Canvas::new()
         .flow_down(&[(ids.chat_canvas, widget::Canvas::new().color(color::LIGHT_BLUE)),
                      (ids.keypad_canvas,
-                      widget::Canvas::new().length(0.0).color(color::LIGHT_BLUE))])
+                      widget::Canvas::new().length(keypad_length).color(color::LIGHT_BLUE))])
         .set(ids.master, ui);
-    chatview_futures::ChatView::new(lobby_history,
-                                    text_edit,
-                                    rust_logo,
-                                    name,
-                                    action_tx,
-                                    Box::new(process))
+    let keypad_bool_ = chatview_futures::ChatView::new(lobby_history,
+                                                       text_edit,
+                                                       ids.master,
+                                                       english_tuple,
+                                                       rust_logo,
+                                                       name,
+                                                       action_tx,
+                                                       Box::new(process))
             .middle_of(ids.chat_canvas)
             .padded_wh_of(ids.chat_canvas, 0.0)
             .set(ids.chat, ui);
-
+    *keypad_bool = keypad_bool_;
 }

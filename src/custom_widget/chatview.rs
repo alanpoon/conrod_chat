@@ -2,6 +2,7 @@ use conrod::{self, widget, Colorable, Labelable, Positionable, Widget, image, Si
 use custom_widget::item_history;
 use conrod_keypad::custom_widget::text_edit::TextEdit;
 use conrod_keypad::english;
+use custom_widget::Message;
 use std::sync::mpsc;
 /// The type upon which we'll implement the `Widget` trait.
 #[derive(WidgetCommon)]
@@ -24,12 +25,7 @@ pub struct ChatView<'a> {
     pub closure: Box<fn(&str, &str) -> String>,
     enabled: bool,
 }
-#[derive(Debug,Clone)]
-pub struct Message {
-    pub image_id: Option<image::Id>,
-    pub name: String,
-    pub text: String,
-}
+
 
 #[derive(Copy, Clone, Debug, Default, PartialEq, WidgetStyle)]
 pub struct Style {
@@ -164,8 +160,6 @@ impl<'a> Widget for ChatView<'a> {
                .middle_of(state.ids.text_edit_button_panel)
                .set(state.ids.text_edit_button, ui)
                .was_clicked() {
-            //  let mut g ="".to_string();
-            // let g = format!("{{chat:{},location:'lobby'}}",k);
             let g = (*self.closure)(self.name, k);
             self.action_tx.send(g).unwrap();
             *k = "".to_owned();

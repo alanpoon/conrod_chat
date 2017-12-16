@@ -13,6 +13,7 @@ extern crate futures;
 extern crate tokio_core;
 #[cfg(feature="web_socket")]
 extern crate websocket;
+#[cfg(feature="keypad")]
 extern crate conrod_keypad;
 pub mod chat;
 pub mod app;

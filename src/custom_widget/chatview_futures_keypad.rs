@@ -1,6 +1,8 @@
 use conrod::{widget, Colorable, Positionable, Widget, image, Sizeable, color, Labelable};
 use custom_widget::item_history;
 use custom_widget::Message;
+use conrod_keypad::custom_widget::text_edit::TextEdit;
+use conrod_keypad::english;
 use futures::{Future, Sink};
 use futures::sync::mpsc;
 
@@ -13,6 +15,8 @@ pub struct ChatView<'a, T> {
     common: widget::CommonBuilder,
     pub lists: &'a mut Vec<Message>,
     pub text_edit: &'a mut String,
+    pub master_id: widget::Id,
+    pub english_tuple: &'a (Vec<english::KeyButton>, Vec<english::KeyButton>, english::KeyButton),
     /// See the Style struct below.
     style: Style,
     /// Whether the button is currently enabled, i.e. whether it responds to
@@ -53,6 +57,10 @@ impl<'a, T> ChatView<'a, T> {
     /// Create a button context to be built upon.
     pub fn new(lists: &'a mut Vec<Message>,
                te: &'a mut String,
+               master_id: widget::Id,
+               english_tuple: &'a (Vec<english::KeyButton>,
+                                   Vec<english::KeyButton>,
+                                   english::KeyButton),
                image_id: Option<image::Id>,
                name: &'a String,
                action_tx: mpsc::Sender<T>,
@@ -62,6 +70,8 @@ impl<'a, T> ChatView<'a, T> {
             lists: lists,
             common: widget::CommonBuilder::default(),
             text_edit: te,
+            master_id: master_id,
+            english_tuple: english_tuple,
             style: Style::default(),
             image_id: image_id,
             name: name,
@@ -94,7 +104,7 @@ impl<'a, T> Widget for ChatView<'a, T> {
     /// The event produced by instantiating the widget.
     ///
     /// `Some` when clicked, otherwise `None`.
-    type Event = ();
+    type Event = bool;
 
     fn init_state(&self, id_gen: widget::id::Generator) -> Self::State {
         State { ids: Ids::new(id_gen) }
@@ -106,7 +116,7 @@ impl<'a, T> Widget for ChatView<'a, T> {
 
     /// Update the state of the button by handling any input that has occurred since the last
     /// update.
-    fn update(self, args: widget::UpdateArgs<Self>) {
+    fn update(self, args: widget::UpdateArgs<Self>) -> bool {
         let widget::UpdateArgs { id, state, ui, style, .. } = args;
         // Finally, we'll describe how we want our widget drawn by simply instantiating the
         // necessary primitive graphics widgets.
@@ -132,7 +142,7 @@ impl<'a, T> Widget for ChatView<'a, T> {
             .set(state.ids.chat_canvas, ui);
 
         let k = self.text_edit;
-        let editz = widget::TextEdit::new(k)
+        let (editz, keypad_bool) = TextEdit::new(k,self.master_id,self.english_tuple)
             .color(color::GREY)
             .padded_w_of(state.ids.text_edit_panel, 20.0)
             .mid_top_of(state.ids.text_edit_panel)
@@ -182,6 +192,6 @@ impl<'a, T> Widget for ChatView<'a, T> {
                                                             style.item_rect(&ui.theme)[1]);
             item.set(cb, ui);
         }
-        ()
+        keypad_bool
     }
 }

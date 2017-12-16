@@ -1,5 +1,5 @@
 use conrod::{self, widget, Colorable, Positionable, Widget, Sizeable, color};
-use custom_widget::chatview::Message;
+use custom_widget::Message;
 use std;
 /// The type upon which we'll implement the `Widget` trait.
 #[derive(WidgetCommon)]
