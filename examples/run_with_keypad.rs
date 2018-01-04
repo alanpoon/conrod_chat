@@ -26,7 +26,7 @@ use websocket::message::OwnedMessage;
 use std::sync::mpsc::{Sender, Receiver};
 use futures::sync::mpsc;
 use std::sync::{Arc, Mutex};
-const CONNECTION: &'static str = "ws://0.0.0.1:8080";
+const CONNECTION: &'static str = "ws://0.0.0.0:8080";
 
 pub struct GameApp {}
 widget_ids! {

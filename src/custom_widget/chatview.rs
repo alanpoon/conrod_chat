@@ -1,4 +1,4 @@
-use conrod::{self, widget, Colorable, Labelable, Positionable, Widget, image, Sizeable, color};
+use conrod::{self, widget, Colorable, Labelable, Positionable, Widget,Sizeable, color};
 use custom_widget::item_history;
 use conrod_keypad::custom_widget::text_edit::TextEdit;
 use conrod_keypad::english;
@@ -139,7 +139,6 @@ impl<'a> Widget for ChatView<'a> {
 
         let k = self.text_edit;
         let (editz, keypad_bool) = TextEdit::new(k,self.master_id,self.english_tuple)
-            .color(color::GREY)
             .padded_w_of(state.ids.text_edit_panel, 20.0)
             .mid_top_of(state.ids.text_edit_panel)
             .center_justify()

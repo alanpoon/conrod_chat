@@ -4,7 +4,8 @@ pub mod item_history;
 #[cfg(feature="keypad")]
 pub mod chatview_futures_keypad;
 #[cfg(feature="keypad")]
-pub use chatview_futures_keypad as chatview_futures;
+pub use custom_widget::chatview_futures_keypad as chatview_futures;
+
 #[cfg(not(feature="keypad"))]
 pub mod chatview_futures;
 
