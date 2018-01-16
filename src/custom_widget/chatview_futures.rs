@@ -161,7 +161,7 @@ impl<'a, T> Widget for ChatView<'a, T> {
                 .send(g)
                 .wait()
                 .unwrap();
-            *self.text_edit = "";
+            *self.text_edit = "".to_owned();
         };
         widget::Scrollbar::y_axis(state.ids.text_edit_panel)
             .auto_hide(false)
