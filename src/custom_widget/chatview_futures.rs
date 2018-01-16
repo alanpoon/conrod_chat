@@ -134,7 +134,7 @@ impl<'a, T> Widget for ChatView<'a, T> {
 
         let k = self.text_edit.clone();
         println!("136 {:?}",k.clone());
-        let editz = widget::TextEdit::new(&k)
+        let editz = widget::TextEdit::new(self.text_edit)
             .color(color::GREY)
             .padded_w_of(state.ids.text_edit_panel, 20.0)
             .mid_top_of(state.ids.text_edit_panel)
