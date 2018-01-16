@@ -1,4 +1,4 @@
-use conrod::{self, widget, Colorable, Labelable, Positionable, Widget,Sizeable, color};
+use conrod::{self, widget, Colorable, Labelable, Positionable, Widget, Sizeable, color};
 use custom_widget::item_history;
 use conrod_keypad::custom_widget::text_edit::TextEdit;
 use conrod_keypad::english;

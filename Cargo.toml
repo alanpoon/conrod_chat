@@ -4,9 +4,9 @@ version = "0.1.0"
 authors = ["alanpoon"]
 
 [dependencies]
-conrod = { version="0.57.0", features = ["glium","winit"]}
+conrod = { git="https://github.com/alanpoon/conrod.git", features = ["glium","winit"]}
 conrod_derive = "0.1.0"
-conrod_keypad = {path="../conrod_keypad",optional=true}
+conrod_keypad = {git="https://github.com/alanpoon/conrod_keypad.git",optional=true}
 websocket = { version ="0.20.2",optional=true}
 futures ={ version = "0.1.14", features=["use_std"] }
 tokio-core ="0.1.9"
