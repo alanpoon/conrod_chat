@@ -132,8 +132,8 @@ impl<'a, T> Widget for ChatView<'a, T> {
             .middle_of(id)
             .set(state.ids.chat_canvas, ui);
 
-        let k = self.text_edit;
-        let editz = widget::TextEdit::new(k)
+        let k = self.text_edit.clone();
+        let editz = widget::TextEdit::new(&k)
             .color(color::GREY)
             .padded_w_of(state.ids.text_edit_panel, 20.0)
             .mid_top_of(state.ids.text_edit_panel)
@@ -142,7 +142,7 @@ impl<'a, T> Widget for ChatView<'a, T> {
             .restrict_to_height(false) // Let the height grow infinitely and scroll.
             .set(state.ids.text_edit, ui);
         for edit in editz {
-            *k = edit;
+            self.text_edit = edit;
         }
         let button_panel = ui.rect_of(state.ids.text_edit_button_panel).unwrap();
         let w_button_panel = button_panel.w();
@@ -161,7 +161,7 @@ impl<'a, T> Widget for ChatView<'a, T> {
                 .send(g)
                 .wait()
                 .unwrap();
-            *k = "".to_owned();
+            self.text_edit = "".to_owned();
         };
         widget::Scrollbar::y_axis(state.ids.text_edit_panel)
             .auto_hide(false)
