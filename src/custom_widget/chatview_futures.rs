@@ -165,19 +165,20 @@ impl<'a, T> Widget for ChatView<'a, T> {
         };
         widget::Scrollbar::y_axis(state.ids.text_edit_panel)
             .auto_hide(false)
-            .thickness(20.0)
+            .thickness(30.0)
             .color(color::LIGHT_GREY)
             .set(state.ids.text_edit_panel_scrollbar, ui);
         let num = self.lists.len();
         let (mut items, scrollbar) = widget::List::flow_down(num)
             .item_size(60.0)
-            .scrollbar_on_top()
+            .scrollbar_thickness(30.0)
+            .scrollbar_color(color::LIGHT_GREY)
             .middle_of(state.ids.message_panel)
             .wh_of(state.ids.message_panel)
             .set(state.ids.history_list, ui);
 
         if let Some(s) = scrollbar {
-            s.color(color::LIGHT_GREY).set(ui)
+            s.set(ui)
         }
         let mut it_j = self.lists.iter();
         while let (Some(a), Some(item)) = (it_j.next(), items.next(ui)) {
