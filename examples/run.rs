@@ -14,7 +14,7 @@ extern crate hardback_codec;
 extern crate toa_ping;
 extern crate websocket;
 extern crate image;
-
+// run with --features "keypad"
 use conrod::{widget, color, Colorable, Widget, Positionable, Sizeable};
 use conrod::backend::glium::glium::{self, glutin, Surface};
 use conrod_chat::backend::websocket::client;
@@ -105,18 +105,19 @@ impl GameApp {
         //<logic::game::ConrodMessage<OwnedMessage>>
         let mut last_update = std::time::Instant::now();
         let mut last_update_sys = std::time::SystemTime::now();
-        let mut demo_text_edit = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. \
+       /* let mut demo_text_edit = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. \
             Mauris aliquet porttitor tellus vel euismod. Integer lobortis volutpat bibendum. Nulla \
             finibus odio nec elit condimentum, rhoncus fermentum purus lacinia. Interdum et malesuada \
             fames ac ante ipsum primis in faucibus. Cras rhoncus nisi nec dolor bibendum pellentesque. \
             Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. \
             Quisque commodo nibh hendrerit nunc sollicitudin sodales. Cras vitae tempus ipsum. Nam \
             magna est, efficitur suscipit dolor eu, consectetur consectetur urna.".to_owned();
+            */
+        let mut demo_text_edit = "".to_owned();
         let mut lobby_history = vec![];
         let mut c = 0;
         let mut ids = Ids::new(ui.widget_id_generator());
         let name = "alan".to_owned();
-
         let sixteen_ms = std::time::Duration::from_millis(100);
         let mut captured_event: Option<ConrodMessage> = None;
         let mut keypad_bool = false;
@@ -166,8 +167,10 @@ impl GameApp {
                                 [w as f64, h as f64],
                                 &mut lobby_history,
                                 &mut demo_text_edit,
+                                &mut keypad_bool,
                                 &name,
                                 Some(rust_logo),
+                                keypad_png,
                                 proxy_action_tx.clone(),
                                 &mut ids);
                 }
@@ -177,8 +180,10 @@ impl GameApp {
                                 [w as f64, h as f64],
                                 &mut lobby_history,
                                 &mut demo_text_edit,
+                                &mut keypad_bool,
                                 &name,
                                 Some(rust_logo),
+                                keypad_png,
                                 proxy_action_tx.clone(),
                                 &mut ids);
                 }
@@ -274,28 +279,72 @@ fn load_image(display: &glium::Display, path: &str) -> glium::texture::Texture2d
     let texture = glium::texture::Texture2d::new(display, raw_image).unwrap();
     texture
 }
+#[cfg(feature="keypad")]
 fn set_widgets(ui: &mut conrod::UiCell,
                dimension: [f64; 2],
                lobby_history: &mut Vec<chat::message::Message>,
                text_edit: &mut String,
+               keypad_bool: &mut bool,
                name: &String,
                rust_logo: Option<conrod::image::Id>,
+               keypad_png:conrod::image::Id,
                action_tx: mpsc::Sender<OwnedMessage>,
                ids: &mut Ids) {
+    use conrod_chat::chat::{sprite, english};
+    let english_tuple = english::populate(keypad_png, sprite::get_spriteinfo());
 
+    let (keypad_length, _) = if *keypad_bool {
+        (dimension[1] * 0.375, 400.0)
+    } else {
+        (0.0, 700.0)
+    };
     widget::Canvas::new()
         .flow_down(&[(ids.chat_canvas, widget::Canvas::new().color(color::LIGHT_BLUE)),
                      (ids.keypad_canvas,
-                      widget::Canvas::new().length(0.0).color(color::LIGHT_BLUE))])
+                      widget::Canvas::new().length(keypad_length).color(color::LIGHT_BLUE))])
         .set(ids.master, ui);
-    chatview_futures::ChatView::new(lobby_history,
-                                    text_edit,
-                                    rust_logo,
-                                    name,
-                                    action_tx,
-                                    Box::new(process))
+    let keypad_bool_ = chatview_futures::ChatView::new(lobby_history,
+                                                       text_edit,
+                                                       ids.master,
+                                                       &english_tuple,
+                                                       rust_logo,
+                                                       name,
+                                                       action_tx,
+                                                       Box::new(process))
             .middle_of(ids.chat_canvas)
             .padded_wh_of(ids.chat_canvas, 0.0)
             .set(ids.chat, ui);
-
+    *keypad_bool = keypad_bool_;
+}
+#[cfg(not(feature="keypad"))]
+fn set_widgets(ui: &mut conrod::UiCell,
+               dimension: [f64; 2],
+               lobby_history: &mut Vec<chat::message::Message>,
+               text_edit: &mut String,
+               keypad_bool: &mut bool,
+               name: &String,
+               rust_logo: Option<conrod::image::Id>,
+               _keypad:conrod::image::Id,
+               action_tx: mpsc::Sender<OwnedMessage>,
+               ids: &mut Ids) {
+    let (keypad_length, _) = if *keypad_bool {
+        (dimension[1] * 0.375, 400.0)
+    } else {
+        (0.0, 700.0)
+    };
+    widget::Canvas::new()
+        .flow_down(&[(ids.chat_canvas, widget::Canvas::new().color(color::LIGHT_BLUE)),
+                     (ids.keypad_canvas,
+                      widget::Canvas::new().length(keypad_length).color(color::LIGHT_BLUE))])
+        .set(ids.master, ui);
+    chatview_futures::ChatView::new(lobby_history,
+                                                       text_edit,
+                                                       rust_logo,
+                                                       name,
+                                                       action_tx,
+                                                       Box::new(process))
+            .middle_of(ids.chat_canvas)
+            .padded_wh_of(ids.chat_canvas, 0.0)
+            .set(ids.chat, ui);
+    
 }

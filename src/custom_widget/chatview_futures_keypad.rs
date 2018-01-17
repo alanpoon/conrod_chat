@@ -1,5 +1,4 @@
-use conrod::{widget, Positionable, Widget, image, Sizeable, color, Labelable};
-use conrod::color::Colorable;
+use conrod::{widget,Colorable, Positionable, Widget, image, Sizeable, color, Labelable};
 use custom_widget::item_history;
 use custom_widget::Message;
 use conrod_keypad::custom_widget::text_edit::TextEdit;
@@ -182,7 +181,7 @@ impl<'a, T> Widget for ChatView<'a, T> {
         let (mut items, scrollbar) = widget::List::flow_down(num)
             .item_size(60.0)
             .scrollbar_thickness(30.0)
-            .color(color::LIGHT_GREY)
+            .scrollbar_color(color::LIGHT_GREY)
             .middle_of(state.ids.message_panel)
             .wh_of(state.ids.message_panel)
             .set(state.ids.history_list, ui);

@@ -39,7 +39,7 @@ widget_ids! {
         text_edit_body,
         text_edit_panel,
         text_edit_panel_scrollbar,
-        text_edit,
+        text_edit_for_chat,
         text_edit_button_panel,
         text_edit_button,
     }
@@ -135,13 +135,14 @@ impl<'a, T> Widget for ChatView<'a, T> {
         let k = self.text_edit.clone();
         println!("136 {:?}",k.clone());
         let editz = widget::TextEdit::new(self.text_edit)
-            .color(color::GREY)
+          /*  .color(color::GREY)
             .padded_w_of(state.ids.text_edit_panel, 20.0)
             .mid_top_of(state.ids.text_edit_panel)
             .center_justify()
             .line_spacing(2.5)
             .restrict_to_height(false) // Let the height grow infinitely and scroll.
-            .set(state.ids.text_edit, ui);
+            */
+            .set(state.ids.text_edit_for_chat, ui);
              println!("144");
         for edit in editz {
             *self.text_edit = edit;
