@@ -136,7 +136,7 @@ impl<'a, T> Widget for ChatView<'a, T> {
         println!("136 {:?}",k.clone());
         let editz = widget::TextEdit::new(self.text_edit)
             .color(color::GREY)
-            .padded_w_of(state.ids.text_edit_panel, 20.0)
+            .padded_w_of(state.ids.text_edit_panel, 0.0)
             .mid_top_of(state.ids.text_edit_panel)
             .center_justify()
             .line_spacing(2.5)

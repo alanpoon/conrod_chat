@@ -105,15 +105,15 @@ impl GameApp {
         //<logic::game::ConrodMessage<OwnedMessage>>
         let mut last_update = std::time::Instant::now();
         let mut last_update_sys = std::time::SystemTime::now();
-       /* let mut demo_text_edit = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. \
+        let mut demo_text_edit = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. \
             Mauris aliquet porttitor tellus vel euismod. Integer lobortis volutpat bibendum. Nulla \
             finibus odio nec elit condimentum, rhoncus fermentum purus lacinia. Interdum et malesuada \
             fames ac ante ipsum primis in faucibus. Cras rhoncus nisi nec dolor bibendum pellentesque. \
             Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. \
             Quisque commodo nibh hendrerit nunc sollicitudin sodales. Cras vitae tempus ipsum. Nam \
             magna est, efficitur suscipit dolor eu, consectetur consectetur urna.".to_owned();
-            */
-        let mut demo_text_edit = "".to_owned();
+        
+        //let mut demo_text_edit = "".to_owned();
         let mut lobby_history = vec![];
         let mut c = 0;
         let mut ids = Ids::new(ui.widget_id_generator());
