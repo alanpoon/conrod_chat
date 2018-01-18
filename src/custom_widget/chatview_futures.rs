@@ -131,10 +131,13 @@ impl<'a, T> Widget for ChatView<'a, T> {
                                                  .color(color::DARK_CHARCOAL))]))])
             .middle_of(id)
             .set(state.ids.chat_canvas, ui);
-
-        let k = self.text_edit.clone();
+            let k =if w_can==0.0{
+                "".to_owned()
+            }else{
+                self.text_edit.clone();
+            }
         println!("136 {:?}",k.clone());
-        let editz = widget::TextEdit::new(self.text_edit)
+        let editz = widget::TextEdit::new(&k)
             .color(color::GREY)
             .padded_w_of(state.ids.text_edit_panel, 0.0)
             .mid_top_of(state.ids.text_edit_panel)
