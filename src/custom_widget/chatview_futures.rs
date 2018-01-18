@@ -134,7 +134,7 @@ impl<'a, T> Widget for ChatView<'a, T> {
             let k =if w_can==0.0{
                 "".to_owned()
             }else{
-                self.text_edit.clone();
+                self.text_edit.clone()
             };
         println!("136 {:?}",k.clone());
         let editz = widget::TextEdit::new(&k)
