@@ -141,8 +141,12 @@ impl<'a, T> Widget for ChatView<'a, T> {
             .middle_of(id)
             .set(state.ids.chat_canvas, ui);
 
-        let k = self.text_edit;
-        let (editz, keypad_bool) = TextEdit::new(k,self.master_id,self.english_tuple)
+       let k =if w_can==0.0{
+                "".to_owned()
+            }else{
+                self.text_edit.clone()
+            };
+        let (editz, keypad_bool) = TextEdit::new(&k,self.master_id,self.english_tuple)
             .color(color::GREY)
             .padded_w_of(state.ids.text_edit_panel, 20.0)
             .mid_top_of(state.ids.text_edit_panel)
