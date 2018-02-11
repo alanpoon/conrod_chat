@@ -14,5 +14,5 @@ os:
 rust: 
   - nightly
 script: 
-  - "cargo build --release"
+  - "cargo build --release --features keypad"
 sudo: false
