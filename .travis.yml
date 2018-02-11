@@ -1,0 +1,18 @@
+--- 
+addons: 
+  apt: 
+    packages: ~
+cache: cargo
+language: rust
+matrix: 
+  allow_failures: 
+    - 
+      os: osx
+os: 
+  - linux
+  - osx
+rust: 
+  - nightly
+script: 
+  - "cargo build --release"
+sudo: false
