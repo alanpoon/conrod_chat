@@ -155,7 +155,7 @@ impl<'a, T> Widget for ChatView<'a, T> {
             .restrict_to_height(false) // Let the height grow infinitely and scroll.
             .set(state.ids.text_edit, ui);
         for edit in editz {
-        *self.text_edit = edit;
+         *self.text_edit = edit;
         }
         let button_panel = ui.rect_of(state.ids.text_edit_button_panel).unwrap();
         let w_button_panel = button_panel.w();
