@@ -37,7 +37,7 @@ assets = "assets"
 
 [target.'cfg(target_os="android")'.dev-dependencies]
 android_glue = "0.2.3"
-rusttype = "*"
+rusttype = "0.3.0"
 
 [target.'cfg(not(target_os="android"))'.dev-dependencies]
 find_folder = "0.3.0"
