@@ -29,7 +29,7 @@ pub mod client {
                    -> Result<(), ConnectionError> {
         println!("run");
         let gui_c = gui.clone();
-        match ClientBuilder::new(con) {
+        match ClientBuilder::new(&con) {
             Ok(c) => {
                 let mut core = Core::new().unwrap();
                 let runner= c.add_protocol("rust-websocket")
