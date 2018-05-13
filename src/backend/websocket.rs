@@ -99,7 +99,7 @@ pub mod client {
         match ClientBuilder::new(&con) {
             Ok(_) => {
                 let mut core = Core::new().unwrap();
-                let runner = ClientBuilder::new(con)
+                let runner = ClientBuilder::new(&con)
             .unwrap()
             .add_protocol("rust-websocket")
             .async_connect_insecure(&core.handle())
