@@ -23,7 +23,7 @@ pub mod client {
         InvalidDestination,
     }
 
-    pub fn run<'a>(con: &'static str,
+    pub fn run<'a>(con: String,
                    gui: std::sync::mpsc::Sender<Message<'a>>,
                    rx: mpsc::Receiver<Message<'a>>)
                    -> Result<(), ConnectionError> {
