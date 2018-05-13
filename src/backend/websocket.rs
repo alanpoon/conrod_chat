@@ -90,13 +90,13 @@ pub mod client {
 
     }
 
-    pub fn run_owned_message(con: &'static str,
+    pub fn run_owned_message(con: String,
                              gui: std::sync::mpsc::Sender<OwnedMessage>,
                              rx: mpsc::Receiver<OwnedMessage>)
                              -> Result<(), ConnectionError> {
         println!("run");
         let gui_c = gui.clone();
-        match ClientBuilder::new(con) {
+        match ClientBuilder::new(&con) {
             Ok(_) => {
                 let mut core = Core::new().unwrap();
                 let runner = ClientBuilder::new(con)
