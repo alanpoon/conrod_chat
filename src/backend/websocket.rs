@@ -23,13 +23,13 @@ pub mod client {
         InvalidDestination,
     }
 
-    pub fn run<'a>(con: &'static str,
+    pub fn run<'a>(con: String,
                    gui: std::sync::mpsc::Sender<Message<'a>>,
                    rx: mpsc::Receiver<Message<'a>>)
                    -> Result<(), ConnectionError> {
         println!("run");
         let gui_c = gui.clone();
-        match ClientBuilder::new(con) {
+        match ClientBuilder::new(&con) {
             Ok(c) => {
                 let mut core = Core::new().unwrap();
                 let runner= c.add_protocol("rust-websocket")
@@ -90,16 +90,16 @@ pub mod client {
 
     }
 
-    pub fn run_owned_message(con: &'static str,
+    pub fn run_owned_message(con: String,
                              gui: std::sync::mpsc::Sender<OwnedMessage>,
                              rx: mpsc::Receiver<OwnedMessage>)
                              -> Result<(), ConnectionError> {
         println!("run");
         let gui_c = gui.clone();
-        match ClientBuilder::new(con) {
+        match ClientBuilder::new(&con) {
             Ok(_) => {
                 let mut core = Core::new().unwrap();
-                let runner = ClientBuilder::new(con)
+                let runner = ClientBuilder::new(&con)
             .unwrap()
             .add_protocol("rust-websocket")
             .async_connect_insecure(&core.handle())

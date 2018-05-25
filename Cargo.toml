@@ -4,8 +4,8 @@ version = "0.1.0"
 authors = ["alanpoon"]
 
 [dependencies]
-conrod = { git="https://github.com/alanpoon/conrod.git", features = ["glium","winit"]}
-conrod_derive = "0.1.0"
+conrod = { git="https://github.com/PistonDevelopers/conrod.git", branch="master", features = ["glium","winit"]}
+conrod_derive = {git ="https://github.com/PistonDevelopers/conrod.git", branch="master"}
 conrod_keypad = {git="https://github.com/alanpoon/conrod_keypad.git",optional=true}
 websocket = { version ="0.20.2",optional=true}
 futures ={ version = "0.1.14", features=["use_std"] }
@@ -37,7 +37,7 @@ assets = "assets"
 
 [target.'cfg(target_os="android")'.dev-dependencies]
 android_glue = "0.2.3"
-rusttype = "*"
+rusttype = "0.3.0"
 
 [target.'cfg(not(target_os="android"))'.dev-dependencies]
 find_folder = "0.3.0"
