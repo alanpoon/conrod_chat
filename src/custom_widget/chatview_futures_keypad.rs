@@ -1,4 +1,4 @@
-use conrod::{widget,Colorable, Positionable, Widget, image, Sizeable, color, Labelable};
+use conrod_core::{widget,Colorable, Positionable, Widget, image, Sizeable, color, Labelable};
 use custom_widget::item_history;
 use custom_widget::Message;
 use conrod_keypad::custom_widget::text_edit::TextEdit;

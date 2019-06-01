@@ -1,5 +1,5 @@
-use conrod::{widget, Positionable, Widget, image, Sizeable, color, Labelable};
-use conrod::color::Colorable;
+use conrod_core::{widget, Positionable, Widget, image, Sizeable, color, Labelable};
+use conrod_core::color::Colorable;
 use custom_widget::item_history;
 use custom_widget::Message;
 use futures::{Future, Sink};

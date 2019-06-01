@@ -1,4 +1,4 @@
-use conrod::{self, widget, Colorable, Positionable, Widget, Sizeable, color};
+use conrod_core::{self, widget, Colorable, Positionable, Widget, Sizeable, color};
 use custom_widget::Message;
 use std;
 /// The type upon which we'll implement the `Widget` trait.
@@ -19,13 +19,13 @@ pub struct ItemHistory<'a> {
 #[derive(Copy, Clone, Debug, Default, PartialEq, WidgetStyle)]
 pub struct Style {
     #[conrod(default="(color::BLUE,[200.0,30.0,2.0])")]
-    pub item_rect: Option<(conrod::Color, [f64; 3])>, //w,h, pad bottom
+    pub item_rect: Option<(conrod_core::Color, [f64; 3])>, //w,h, pad bottom
     #[conrod(default="[20.0,20.0,10.0,10.0]")]
     pub item_image: Option<[f64; 4]>, // w,h,l,t
     #[conrod(default="(theme.label_color,theme.font_id,theme.font_size_medium,[100.0,50.0,22.0,5.0])")]
-    pub item_text: Option<(conrod::Color,
-                               Option<conrod::text::font::Id>,
-                               conrod::FontSize,
+    pub item_text: Option<(conrod_core::Color,
+                               Option<conrod_core::text::font::Id>,
+                               conrod_core::FontSize,
                                [f64; 4])>, //RGB,w,h,l,t
 }
 
@@ -64,9 +64,9 @@ impl<'a> ItemHistory<'a> {
         self
     }
     builder_methods!{
-        pub item_rect { style.item_rect = Some((conrod::Color,[f64;3])) }
+        pub item_rect { style.item_rect = Some((conrod_core::Color,[f64;3])) }
         pub item_image { style.item_image = Some([f64;4]) }
-        pub item_text { style.item_text = Some((conrod::Color,Option<conrod::text::font::Id>,conrod::FontSize,[f64;4])) }
+        pub item_text { style.item_text = Some((conrod_core::Color,Option<conrod_core::text::font::Id>,conrod_core::FontSize,[f64;4])) }
     }
 }
 

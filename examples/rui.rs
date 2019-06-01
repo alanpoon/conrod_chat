@@ -1,5 +1,5 @@
 #[macro_use]
-extern crate conrod;
+extern crate conrod_core;
 #[macro_use]
 extern crate conrod_derive;
 extern crate conrod_keypad;
@@ -12,8 +12,8 @@ extern crate android_glue;
 extern crate find_folder;
 
 pub mod support;
-use conrod::{widget, color, Colorable, Widget, Positionable, Sizeable};
-use conrod::backend::glium::glium::{self, glutin, Surface};
+use conrod_core::{widget, color, Colorable, Widget, Positionable, Sizeable};
+use conrod_core::backend::glium::glium::{self, glutin, Surface};
 use conrod_keypad::custom_widget::{text_edit, keypad};
 use conrod_keypad::english;
 use conrod_keypad::sprite;
@@ -28,7 +28,7 @@ widget_ids! {
     }
 }
 pub enum ConrodMessage {
-    Event(Instant, conrod::event::Input),
+    Event(Instant, conrod_core::event::Input),
     Thread(Instant),
 }
 fn main() {
@@ -38,15 +38,15 @@ fn main() {
             .with_gl(glium::glutin::GlRequest::Specific(glium::glutin::Api::OpenGlEs, (3, 0)));
     let mut events_loop = glutin::EventsLoop::new();
     let display = glium::Display::new(window, context, &events_loop).unwrap();
-    let mut renderer = conrod::backend::glium::Renderer::new(&display).unwrap();
+    let mut renderer = conrod_core::backend::glium::Renderer::new(&display).unwrap();
     // construct our `Ui`.
     let (screen_w, screen_h) = display.get_framebuffer_dimensions();
-    let mut ui = conrod::UiBuilder::new([screen_w as f64, screen_h as f64]).build();
+    let mut ui = conrod_core::UiBuilder::new([screen_w as f64, screen_h as f64]).build();
     ui.fonts.insert(support::assets::load_font("fonts/NotoSans/NotoSans-Regular.ttf"));
     let rust_logo = load_image(&display, "images/rust.png");
     let keypad_png = load_image(&display, "images/keypad.png");
     //  let (w, h) = (rust_logo.get_width(), rust_logo.get_height().unwrap());
-    let mut image_map: conrod::image::Map<glium::texture::Texture2d> = conrod::image::Map::new();
+    let mut image_map: conrod_core::image::Map<glium::texture::Texture2d> = conrod_core::image::Map::new();
     let rust_logo = image_map.insert(rust_logo);
     let (w, h) = (keypad_png.get_width(), keypad_png.get_height().unwrap());
     let keypad_png = image_map.insert(keypad_png);
@@ -86,7 +86,7 @@ fn main() {
                 }
                 _ => {}
             }
-            let input = match conrod::backend::winit::convert_event(event.clone(), &display) {
+            let input = match conrod_core::backend::winit::convert_event(event.clone(), &display) {
                 None => {
                     to_continue = true;
                 }
@@ -148,7 +148,7 @@ fn load_image(display: &glium::Display, path: &str) -> glium::texture::Texture2d
     let texture = glium::texture::Texture2d::new(display, raw_image).unwrap();
     texture
 }
-fn set_widgets(ui: &mut conrod::UiCell,
+fn set_widgets(ui: &mut conrod_core::UiCell,
                demo_text_edit: &mut String,
                keypadvariant: &mut keypad::KeyPadVariant,
                english_tuple: &(Vec<english::KeyButton>,

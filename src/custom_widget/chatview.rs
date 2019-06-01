@@ -1,4 +1,4 @@
-use conrod::{self, widget, Colorable, Labelable, Positionable, Widget, Sizeable, color};
+use conrod_core::{self, widget, Colorable, Labelable, Positionable, Widget, Sizeable, color};
 use custom_widget::item_history;
 use conrod_keypad::custom_widget::text_edit::TextEdit;
 use conrod_keypad::english;
@@ -20,7 +20,7 @@ pub struct ChatView<'a> {
     /// Whether the button is currently enabled, i.e. whether it responds to
     /// user input.
     pub action_tx: mpsc::Sender<String>,
-    pub image_id: Option<conrod::image::Id>,
+    pub image_id: Option<conrod_core::image::Id>,
     pub name: &'a String,
     pub closure: Box<fn(&str, &str) -> String>,
     enabled: bool,
@@ -60,7 +60,7 @@ impl<'a> ChatView<'a> {
                english_tuple: &'a (Vec<english::KeyButton>,
                                    Vec<english::KeyButton>,
                                    english::KeyButton),
-               image_id: Option<conrod::image::Id>,
+               image_id: Option<conrod_core::image::Id>,
                name: &'a String,
                action_tx: mpsc::Sender<String>,
                closure: Box<fn(&str, &str) -> String>)
