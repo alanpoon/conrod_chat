@@ -1,6 +1,5 @@
 #[macro_use]
 extern crate conrod_core;
-#[macro_use]
 extern crate conrod_derive;
 extern crate conrod_glium;
 extern crate conrod_keypad;

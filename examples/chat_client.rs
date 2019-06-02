@@ -1,7 +1,7 @@
 #[macro_use]
 extern crate serde_json;
-#[macro_use]
-extern crate conrod;
+extern crate conrod_core;
+extern crate conrod_glium;
 #[cfg(target_os="android")]
 extern crate rusttype;
 #[cfg(target_os="android")]
@@ -14,9 +14,10 @@ extern crate hardback_codec;
 extern crate toa_ping;
 extern crate websocket;
 extern crate image;
+extern crate glium;
 // run with --features "keypad"
-use conrod::{widget, color, Colorable, Widget, Positionable, Sizeable};
-use conrod::backend::glium::glium::{self, glutin, Surface};
+use conrod_core::{widget, color, Colorable, Widget, Positionable, Sizeable};
+use glium::Surface;
 use conrod_chat::backend::websocket::client;
 use conrod_chat::custom_widget::chatview_futures;
 use conrod_chat::chat;
@@ -40,6 +41,8 @@ widget_ids! {
     }
 }
 pub mod support;
+const WIDTH: u32 = 600;
+const HEIGHT: u32 = 420;
 impl GameApp {
     pub fn new() -> Result<(), String> {
         let (proxy_tx, proxy_rx) = std::sync::mpsc::channel();
@@ -65,7 +68,7 @@ impl GameApp {
                         let mut ss_tx = ss_tx.lock().unwrap();
                         *ss_tx = tx;
                         drop(ss_tx);
-                        match client::run_owned_message(CONNECTION, proxy_tx.clone(), rx) {
+                        match client::run_owned_message(CONNECTION.to_owned(), proxy_tx.clone(), rx) {
                             Ok(_) => connected = true,
                             Err(err) => {
                                 println!("reconnecting");
@@ -83,23 +86,23 @@ impl GameApp {
             }
 
         });
-        let window = glutin::WindowBuilder::new();
-        let context =
-            glium::glutin::ContextBuilder::new()
-                .with_gl(glium::glutin::GlRequest::Specific(glium::glutin::Api::OpenGlEs, (3, 0)));
-        let mut events_loop = glutin::EventsLoop::new();
+        let mut events_loop = glium::glutin::EventsLoop::new();
+        let window = glium::glutin::WindowBuilder::new()
+            .with_title("Hello Conrod!")
+            .with_dimensions((WIDTH, HEIGHT).into());
+        let context = glium::glutin::ContextBuilder::new()
+            .with_vsync(true)
+            .with_multisampling(4);
         let display = glium::Display::new(window, context, &events_loop).unwrap();
-        let mut renderer = conrod::backend::glium::Renderer::new(&display).unwrap();
+        let display = support::glium_wrapper::GliumDisplayWinitWrapper(display);
+        let mut renderer = conrod_glium::Renderer::new(&display.0).unwrap();
         // construct our `Ui`.
-        let (w, h) = display.get_framebuffer_dimensions();
-        let mut ui = conrod::UiBuilder::new([w as f64, h as f64]).build();
+        let mut ui = conrod_core::UiBuilder::new([WIDTH as f64, HEIGHT as f64]).build();
         println!("conrod ..ui");
         ui.fonts.insert(support::assets::load_font("fonts/NotoSans/NotoSans-Regular.ttf"));
-        let keypad_png = load_image(&display, "images/keypad.png");
-        let rust_logo = load_image(&display, "images/rust.png");
-        let mut image_map: conrod::image::Map<glium::texture::Texture2d> =
-            conrod::image::Map::new();
-        let keypad_png = image_map.insert(keypad_png);
+        let rust_logo = load_image(&display.0, "images/rust.png");
+        let mut image_map: conrod_core::image::Map<glium::texture::Texture2d> =
+            conrod_core::image::Map::new();
         let rust_logo = image_map.insert(rust_logo);
         let events_loop_proxy = events_loop.create_proxy();
         //<logic::game::ConrodMessage<OwnedMessage>>
@@ -130,7 +133,7 @@ impl GameApp {
                 match event.clone() {
                     glium::glutin::Event::WindowEvent { event, .. } => {
                         match event {
-                            glium::glutin::WindowEvent::Closed |
+                            glium::glutin::WindowEvent::CloseRequested |
                             glium::glutin::WindowEvent::KeyboardInput {
                                 input: glium::glutin::KeyboardInput {
                                     virtual_keycode: Some(glium::glutin::VirtualKeyCode::Escape),
@@ -143,7 +146,7 @@ impl GameApp {
                     }
                     _ => {}
                 }
-                let input = match conrod::backend::winit::convert_event(event.clone(), &display) {
+                let input = match conrod_winit::convert_event(event, &display) {
                     None => {
                         to_continue = true;
                     }
@@ -164,26 +167,24 @@ impl GameApp {
                     ui.handle_event(input.clone());
                     let mut ui = ui.set_widgets();
                     set_widgets(&mut ui,
-                                [w as f64, h as f64],
+                                [WIDTH as f64, HEIGHT as f64],
                                 &mut lobby_history,
                                 &mut demo_text_edit,
                                 &mut keypad_bool,
                                 &name,
                                 Some(rust_logo),
-                                keypad_png,
                                 proxy_action_tx.clone(),
                                 &mut ids);
                 }
                 Some(ConrodMessage::Thread(t)) => {
                     let mut ui = ui.set_widgets();
                     set_widgets(&mut ui,
-                                [w as f64, h as f64],
+                                [WIDTH as f64, HEIGHT as f64],
                                 &mut lobby_history,
                                 &mut demo_text_edit,
                                 &mut keypad_bool,
                                 &name,
                                 Some(rust_logo),
-                                keypad_png,
                                 proxy_action_tx.clone(),
                                 &mut ids);
                 }
@@ -233,15 +234,12 @@ impl GameApp {
                 }
             }
 
-
-            let primitives = ui.draw();
-
-            renderer.fill(&display, primitives, &image_map);
-            let mut target = display.draw();
-            target.clear_color(0.0, 0.0, 0.0, 1.0);
-            renderer.draw(&display, &mut target, &image_map).unwrap();
-
-            target.finish().unwrap();
+        let primitives = ui.draw();
+        renderer.fill(&display.0, primitives, &image_map);
+        let mut target = display.0.draw();
+        target.clear_color(0.0, 0.0, 0.0, 1.0);
+        renderer.draw(&display.0, &mut target, &image_map).unwrap();
+        target.finish().unwrap();
             c += 1;
         }
         Ok(())
@@ -280,18 +278,17 @@ fn load_image(display: &glium::Display, path: &str) -> glium::texture::Texture2d
     texture
 }
 #[cfg(feature="keypad")]
-fn set_widgets(ui: &mut conrod::UiCell,
+fn set_widgets(ui: &mut conrod_core::UiCell,
                dimension: [f64; 2],
                lobby_history: &mut Vec<chat::message::Message>,
                text_edit: &mut String,
                keypad_bool: &mut bool,
                name: &String,
-               rust_logo: Option<conrod::image::Id>,
-               keypad_png:conrod::image::Id,
+               rust_logo: Option<conrod_core::image::Id>,
                action_tx: mpsc::Sender<OwnedMessage>,
                ids: &mut Ids) {
-    use conrod_chat::chat::{sprite, english};
-    let english_tuple = english::populate(keypad_png, sprite::get_spriteinfo());
+    use conrod_chat::chat::{ english};
+    let english_tuple = english::populate();
 
     let (keypad_length, _) = if *keypad_bool {
         (dimension[1] * 0.375, 400.0)
@@ -317,14 +314,14 @@ fn set_widgets(ui: &mut conrod::UiCell,
     *keypad_bool = keypad_bool_;
 }
 #[cfg(not(feature="keypad"))]
-fn set_widgets(ui: &mut conrod::UiCell,
+fn set_widgets(ui: &mut conrod_core::UiCell,
                dimension: [f64; 2],
                lobby_history: &mut Vec<chat::message::Message>,
                text_edit: &mut String,
                keypad_bool: &mut bool,
                name: &String,
-               rust_logo: Option<conrod::image::Id>,
-               _keypad:conrod::image::Id,
+               rust_logo: Option<conrod_core::image::Id>,
+               _keypad:conrod_core::image::Id,
                action_tx: mpsc::Sender<OwnedMessage>,
                ids: &mut Ids) {
     let (keypad_length, _) = if *keypad_bool {
