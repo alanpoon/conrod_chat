@@ -6,8 +6,6 @@ pub mod message {
 }
 #[cfg(feature="keypad")]
 pub use conrod_keypad::english;
-#[cfg(feature="keypad")]
-pub use conrod_keypad::sprite;
 #[derive(Clone,Debug)]
 pub enum ConrodMessage {
     Event(Instant, conrod_core::event::Input),

@@ -2,8 +2,10 @@
 extern crate conrod_core;
 #[macro_use]
 extern crate conrod_derive;
+extern crate conrod_glium;
 extern crate conrod_keypad;
 extern crate image;
+extern crate glium;
 #[cfg(target_os="android")]
 extern crate rusttype;
 #[cfg(target_os="android")]
@@ -13,10 +15,9 @@ extern crate find_folder;
 
 pub mod support;
 use conrod_core::{widget, color, Colorable, Widget, Positionable, Sizeable};
-use conrod_core::backend::glium::glium::{self, glutin, Surface};
+use glium::Surface;
 use conrod_keypad::custom_widget::{text_edit, keypad};
 use conrod_keypad::english;
-use conrod_keypad::sprite;
 use std::time::Instant;
 
 widget_ids! {
@@ -31,25 +32,25 @@ pub enum ConrodMessage {
     Event(Instant, conrod_core::event::Input),
     Thread(Instant),
 }
+const WIDTH: u32 = 600;
+const HEIGHT: u32 = 420;
 fn main() {
-    let window = glutin::WindowBuilder::new();
-    let context =
-        glium::glutin::ContextBuilder::new()
-            .with_gl(glium::glutin::GlRequest::Specific(glium::glutin::Api::OpenGlEs, (3, 0)));
-    let mut events_loop = glutin::EventsLoop::new();
+    let mut events_loop = glium::glutin::EventsLoop::new();
+    let window = glium::glutin::WindowBuilder::new()
+        .with_title("Hello Conrod!")
+        .with_dimensions((WIDTH, HEIGHT).into());
+    let context = glium::glutin::ContextBuilder::new()
+        .with_vsync(true)
+        .with_multisampling(4);
     let display = glium::Display::new(window, context, &events_loop).unwrap();
-    let mut renderer = conrod_core::backend::glium::Renderer::new(&display).unwrap();
+    let display = support::glium_wrapper::GliumDisplayWinitWrapper(display);
+    let mut renderer = conrod_glium::Renderer::new(&display.0).unwrap();
     // construct our `Ui`.
-    let (screen_w, screen_h) = display.get_framebuffer_dimensions();
-    let mut ui = conrod_core::UiBuilder::new([screen_w as f64, screen_h as f64]).build();
+    let mut ui = conrod_core::UiBuilder::new([WIDTH as f64, HEIGHT as f64]).build();
     ui.fonts.insert(support::assets::load_font("fonts/NotoSans/NotoSans-Regular.ttf"));
-    let rust_logo = load_image(&display, "images/rust.png");
-    let keypad_png = load_image(&display, "images/keypad.png");
-    //  let (w, h) = (rust_logo.get_width(), rust_logo.get_height().unwrap());
-    let mut image_map: conrod_core::image::Map<glium::texture::Texture2d> = conrod_core::image::Map::new();
+    let rust_logo = load_image(&display.0, "images/rust.png");
+    let mut image_map = conrod_core::image::Map::<glium::texture::Texture2d>::new();
     let rust_logo = image_map.insert(rust_logo);
-    let (w, h) = (keypad_png.get_width(), keypad_png.get_height().unwrap());
-    let keypad_png = image_map.insert(keypad_png);
     let events_loop_proxy = events_loop.create_proxy();
     let mut ids = Ids::new(ui.widget_id_generator());
     let mut demo_text_edit = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. \
@@ -65,7 +66,7 @@ fn main() {
     let mut keypadvariant = keypad::KeyPadVariant::Letter(1);
     let mut captured_event: Option<ConrodMessage> = None;
     let sixteen_ms = std::time::Duration::from_millis(100);
-    let english_tuple = english::populate(keypad_png, sprite::get_spriteinfo());
+    let english_tuple = english::populate();
     'render: loop {
         let mut to_break = false;
         let mut to_continue = false;
@@ -73,20 +74,20 @@ fn main() {
             match event.clone() {
                 glium::glutin::Event::WindowEvent { event, .. } => {
                     match event {
-                        glium::glutin::WindowEvent::Closed |
-                            glium::glutin::WindowEvent::KeyboardInput {
-                                input: glium::glutin::KeyboardInput {
-                                    virtual_keycode: Some(glium::glutin::VirtualKeyCode::Escape),
-                                    ..
-                                },
+                        glium::glutin::WindowEvent::CloseRequested |
+                        glium::glutin::WindowEvent::KeyboardInput {
+                            input: glium::glutin::KeyboardInput {
+                                virtual_keycode: Some(glium::glutin::VirtualKeyCode::Escape),
                                 ..
-                            } => {to_break=true;}
+                            },
+                            ..
+                        } => {to_break=true;},
                         _ => (),
                     }
                 }
-                _ => {}
-            }
-            let input = match conrod_core::backend::winit::convert_event(event.clone(), &display) {
+                _ => (),
+            };
+            let input = match conrod_winit::convert_event(event, &display) {
                 None => {
                     to_continue = true;
                 }
@@ -132,12 +133,11 @@ fn main() {
         }
 
         let primitives = ui.draw();
-        renderer.fill(&display, primitives, &image_map);
-        let mut target = display.draw();
+        renderer.fill(&display.0, primitives, &image_map);
+        let mut target = display.0.draw();
         target.clear_color(0.0, 0.0, 0.0, 1.0);
-        renderer.draw(&display, &mut target, &image_map).unwrap();
+        renderer.draw(&display.0, &mut target, &image_map).unwrap();
         target.finish().unwrap();
-        last_update = std::time::Instant::now();
     }
 }
 fn load_image(display: &glium::Display, path: &str) -> glium::texture::Texture2d {
@@ -156,15 +156,16 @@ fn set_widgets(ui: &mut conrod_core::UiCell,
                                 english::KeyButton),
                ids: &mut Ids) {
     widget::Canvas::new().color(color::LIGHT_BLUE).set(ids.master, ui);
-    for edit in text_edit::TextEdit::new(demo_text_edit,ids.master,&english_tuple)
+    let (editz, keypad_bool) = text_edit::TextEdit::new(demo_text_edit,ids.master,&english_tuple)
             .color(color::WHITE)
             .padded_w_of(ids.master, 20.0)
             .mid_top_of(ids.master)
             .center_justify()
             .line_spacing(2.5)
             .restrict_to_height(false) // Let the height grow infinitely and scroll.
-            .set(ids.text_edit, ui) {
-        *demo_text_edit = edit;
-    }
+            .set(ids.text_edit, ui) ;
+        for edit in editz{
+         *demo_text_edit = edit;
+        }
 
 }

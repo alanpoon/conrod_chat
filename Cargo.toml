@@ -27,6 +27,9 @@ image = "0.15.0"
 serde_derive ="1.0"
 hardback_codec = {git = "https://github.com/alanpoon/hardback_codec.git"}
 toa-ping ={git="https://github.com/alanpoon/toa-ping.git"}
+conrod_glium = {path = "../conrod/backends/conrod_glium"}
+conrod_winit = {path = "../conrod/backends/conrod_winit"}
+glium = { version = "0.23" }
 
 [package.metadata.android]
 package_name = "com.github.apoon1.conrod-chat"

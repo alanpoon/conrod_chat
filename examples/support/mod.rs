@@ -5,3 +5,4 @@ pub use support::assets_android as assets;
 
 #[cfg(not(target_os="android"))]
 pub mod assets;
+pub mod glium_wrapper;
