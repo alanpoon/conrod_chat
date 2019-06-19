@@ -2,12 +2,10 @@ use conrod_core::{widget, Positionable, Widget, image, Sizeable, color, Labelabl
 use conrod_core::color::Colorable;
 use custom_widget::item_history;
 use custom_widget::Message;
-use futures::{Future, Sink};
-use futures::sync::mpsc;
 
 /// The type upon which we'll implement the `Widget` trait.
 #[derive(WidgetCommon)]
-pub struct ChatView<'a, T> {
+pub struct ChatView<'a> {
     /// An object that handles some of the dirty work of rendering a GUI. We don't
     /// really have to worry about it.
     #[conrod(common_builder)]
@@ -18,10 +16,9 @@ pub struct ChatView<'a, T> {
     style: Style,
     /// Whether the button is currently enabled, i.e. whether it responds to
     /// user input.
-    pub action_tx: mpsc::Sender<T>,
     pub image_id: Option<image::Id>,
     pub name: &'a String,
-    pub closure: Box<fn(&String, &String) -> T>,
+    pub closure: Box<fn(&String, &String)>,
     enabled: bool,
 }
 
@@ -50,14 +47,13 @@ pub struct State {
     pub ids: Ids,
 }
 
-impl<'a, T> ChatView<'a, T> {
+impl<'a> ChatView<'a> {
     /// Create a button context to be built upon.
     pub fn new(lists: &'a mut Vec<Message>,
                te: &'a mut String,
                image_id: Option<image::Id>,
                name: &'a String,
-               action_tx: mpsc::Sender<T>,
-               closure: Box<fn(&String, &String) -> T>)
+               closure: Box<fn(&String, &String)>)
                -> Self {
         ChatView {
             lists: lists,
@@ -66,7 +62,6 @@ impl<'a, T> ChatView<'a, T> {
             style: Style::default(),
             image_id: image_id,
             name: name,
-            action_tx: action_tx,
             closure: closure,
             enabled: true,
         }
@@ -87,7 +82,7 @@ impl<'a, T> ChatView<'a, T> {
 
 /// A custom Conrod widget must implement the Widget trait. See the **Widget** trait
 /// documentation for more details.
-impl<'a, T> Widget for ChatView<'a, T> {
+impl<'a> Widget for ChatView<'a> {
     /// The State struct that we defined above.
     type State = State;
     /// The Style struct that we defined using the `widget_style!` macro.
@@ -160,11 +155,7 @@ impl<'a, T> Widget for ChatView<'a, T> {
                .set(state.ids.text_edit_button, ui)
                .was_clicked() {
             let kc = k.clone();
-            let g = (*self.closure)(self.name, &kc);
-            self.action_tx
-                .send(g)
-                .wait()
-                .unwrap();
+            (*self.closure)(self.name, &kc);
             *self.text_edit = "".to_owned();
         };
         widget::Scrollbar::y_axis(state.ids.text_edit_panel)
