@@ -18,7 +18,6 @@ extern crate glium;
 // run with --features "keypad"
 use conrod_core::{widget, color, Colorable, Widget, Positionable, Sizeable};
 use glium::Surface;
-use conrod_chat::backend::websocket::client;
 use conrod_chat::custom_widget::chatview_futures;
 use conrod_chat::chat;
 use conrod_chat::chat::ConrodMessage;
@@ -41,6 +40,8 @@ widget_ids! {
     }
 }
 pub mod support;
+pub mod backend;
+use backend::websocket::client;
 const WIDTH: u32 = 600;
 const HEIGHT: u32 = 420;
 impl GameApp {
