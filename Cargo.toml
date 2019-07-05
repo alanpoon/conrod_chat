@@ -4,9 +4,9 @@ version = "0.1.0"
 authors = ["alanpoon"]
 
 [dependencies]
-conrod_core = { path ="../conrod/conrod_core"}
-conrod_derive = { path = "../conrod/conrod_derive"}
-conrod_keypad = {path="../Conrod_KeyPad",optional=true}
+conrod_core = { git ="https://github.com/alanpoon/conrod.git",branch = "crayon"}
+conrod_derive = { git ="https://github.com/alanpoon/conrod.git",branch = "crayon"}
+conrod_keypad = {git="https://github.com/alanpoon/Conrod_KeyPad.git",optional=true}
 
 [features]
 keypad = ["conrod_keypad"]
@@ -18,8 +18,8 @@ image = "0.15.0"
 serde_derive ="1.0"
 hardback_codec = {git = "https://github.com/alanpoon/hardback_codec.git"}
 toa-ping ={git="https://github.com/alanpoon/toa-ping.git"}
-conrod_glium = {path = "../conrod/backends/conrod_glium"}
-conrod_winit = {path = "../conrod/backends/conrod_winit"}
+conrod_glium = {git ="https://github.com/alanpoon/conrod.git",branch = "crayon"}
+conrod_winit = {git ="https://github.com/alanpoon/conrod.git",branch = "crayon"}
 glium = { version = "0.23" }
 tokio-core ="0.1.9"
 futures ={ version = "0.1.14", features=["use_std"] }
